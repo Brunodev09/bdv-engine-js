@@ -1,5 +1,5 @@
 {
-    "size": [10, 10],
+    "size": [10, 1],
     "charsMap": {"a": "red", "b": "green", "c": "blue"},
-    "map": []
+    "map": ["a","a","a","b","a","c","b","c","b","b"]
 }
