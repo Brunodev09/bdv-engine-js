@@ -25,7 +25,6 @@ class Dimension {
     }
 }
 
-
 enum Model {
     RECTANGLE = "RECTANGLE",
     RECTANGLE_BORDER = "RECTANGLE_BORDER",
@@ -47,6 +46,7 @@ class GameObject {
     color: string;
     font?: string;
     message?: string;
+    props?: any;
     constructor(model: Model, position: Point | Point[], dimension: Dimension, color?: string, font?: string, message?: string) {
         if (!color) color = "black"
         this.model = model;
@@ -56,10 +56,11 @@ class GameObject {
 
         this.font = font;
         this.message = message;
+        this.props = {};
     }
 
     addProperty = (propName: string, propValue: any) => {
-        this[propName] = propValue;
+        this.props[propName] = propValue;
     }
 }
 
@@ -123,6 +124,10 @@ class bdv {
         // this.render.fill(new TextFont(message, font), new Point(x, y), null, color);
     }
 
+    RGB() {
+        return { r: Math.floor(Math.random() * 255), g: Math.floor(Math.random() * 255), b: Math.floor(Math.random() * 255) }
+    }
+
     movingSquares = () => {
         let object = new GameObject(Model.RECTANGLE, new Point(100, 100), new Dimension(100, 100), "purple");
         this.render.requestStage(object);
@@ -134,6 +139,10 @@ class bdv {
             if ((<Point>object.position).x > this.dimensions.width || (<Point>object.position).x < 0) speedX = -speedX;
             if ((<Point>object.position).y > this.dimensions.height || (<Point>object.position).y < 0) speedY = -speedY;
         }, 10);
+        setInterval(() => {
+            let { r, g, b } = this.RGB();
+            object.color = `rgb(${r},${g},${b})`;
+        }, 1000);
     };
 
     grid = (rowsX: number, rowsY: number) => {
@@ -161,6 +170,89 @@ class bdv {
         return tracker;
     }
 
+    conways(xRow: number, yRow: number) {
+
+        // Any live cell with fewer than two live neighbours dies, as if by underpopulation.
+        // Any live cell with two or three live neighbours lives on to the next generation.
+        // Any live cell with more than three live neighbours dies, as if by overpopulation.
+        // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+
+        let matrix = [], tracker = [];
+        const tileSize = new Dimension(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
+
+        for (let i = 0; i < xRow; i++) matrix[i] = new Array(yRow);
+
+        for (let i = 0; i < matrix.length; i++) {
+            for (let j = 0; j < matrix[i].length; j++) {
+                if (Math.floor(Math.random() * 10) === 1) {
+                    matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "black");
+                    matrix[i][j].addProperty("alive", true);
+                }
+                else {
+                    matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "white");
+                    matrix[i][j].addProperty("alive", false);
+                }
+                this.render.requestStage(matrix[i][j]);
+            }
+        }
+
+        let isAlive = (position: Point, world: GameObject[][]) => {
+            let neighboursCount = 0;
+
+            const cellStatus = world[position.x][position.y].props["alive"];
+
+            if (world[position.x + 1] && world[position.x + 1][position.y] && 
+                world[position.x + 1][position.y].props["alive"]) neighboursCount++;
+
+            if (world[position.x - 1] && world[position.x - 1][position.y] && 
+                world[position.x - 1][position.y].props["alive"]) neighboursCount++;
+
+            if (world[position.x] && world[position.x][position.y + 1] && 
+                world[position.x][position.y + 1].props["alive"]) neighboursCount++;
+
+            if (world[position.x] && world[position.x][position.y - 1] &&
+                world[position.x][position.y - 1].props["alive"]) neighboursCount++;
+
+            if (world[position.x - 1] && world[position.x - 1][position.y + 1] && 
+                world[position.x - 1][position.y + 1].props["alive"]) neighboursCount++;
+
+            if (world[position.x + 1] && world[position.x + 1][position.y + 1] && 
+                world[position.x + 1][position.y + 1].props["alive"]) neighboursCount++;
+
+            if (world[position.x - 1] && world[position.x - 1][position.y - 1] && 
+                world[position.x - 1][position.y - 1].props["alive"]) neighboursCount++;
+
+            if (world[position.x + 1] && world[position.x + 1][position.y - 1] && 
+                world[position.x + 1][position.y - 1].props["alive"]) neighboursCount++;
+
+            if (cellStatus) {
+                if (neighboursCount < 2) return false;
+                if (neighboursCount === 2 || neighboursCount === 3) return true;
+                if (neighboursCount > 3) return false;
+            }
+            else if (!cellStatus && neighboursCount === 3) return true;
+            else return false;
+        }
+
+        setInterval(() => {
+            let aliveCount = 0, deadCount = 0;
+            for (let i = 0; i < matrix.length; i++) {
+                for (let j = 0; j < matrix.length; j++) {
+                    let alive = isAlive(new Point(i, j), matrix);
+                    if (alive) {
+                        aliveCount++;
+                        matrix[i][j].color = "black";
+                        matrix[i][j].props["alive"] = true;
+                    }
+                    else {
+                        deadCount++;
+                        matrix[i][j].props["alive"] = false;
+                        matrix[i][j].color = "white";
+                    }
+                }
+            }
+        }, 100);
+    }
 }
 
 class bdvRender extends bdv {
@@ -303,6 +395,6 @@ window.onload = function () {
     // let movingSquare = test.movingSquares();
     // let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
     // let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
-    let myGrid = test.grid(50, 50);
-
+    // let myGrid = test.grid(50, 50);
+    let life = test.conways(50, 50);
 }
