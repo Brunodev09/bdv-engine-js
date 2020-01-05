@@ -1,5 +1,9 @@
-// Long term:
-// @TODO - Graphs, Image Loader (with buffer pixel reading), algos applied to grid and graphs on command.
+// Using shapes:
+// @TODO - Load map from JSON, Conway's game of Life, Algos and graphs.
+
+// Reading images:
+// Still thinking...
+
 // @TODO - Easy networking.
 
 
