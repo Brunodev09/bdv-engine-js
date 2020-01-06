@@ -1,24 +1,23 @@
 {
-    "compilerOptions": {
-    //   "resolveJsonModule": true,
-      "experimentalDecorators": true,
-      "emitDecoratorMetadata": true,
-      "esModuleInterop": true,
-      "inlineSourceMap": true,
-      "target": "ES5",
-      "outDir": "./dist",
-      "module": "none",
-      "baseUrl": "./",
-      "typeRoots": [
-      ]
-    },
-    "types": [
-      "reflect-metadata"
-    ],
-    "include": [
-      "./**/*.ts"
-    ],
-    "exclude": [
-      "node_modules",
-    ]
-  }
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "inlineSourceMap": true,
+    "target": "es5",
+    "outDir": "./dist",
+    "module": "CommonJS",
+    "baseUrl": "./",
+    "typeRoots": [],
+  },
+  "types": [
+    "reflect-metadata"
+  ],
+  "include": [
+    "./**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+  ]
+}

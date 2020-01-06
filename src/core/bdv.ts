@@ -1,74 +1,20 @@
-// @TODO - Load tiled map from JSON, Conway's game of Life, Algos and graphs.
+// @TODO - Load tiled map from JSON, Algos and graphs.
+// @TODO - Dungeon generator.
 // @TODO - Nodejs tool that reads a image file and converts it a color-mapped JSON.
+// @TODO - Handling images.
 // @TODO - Collidables.
 // @TODO - Expand pixel rendering, perlin noise and mandelbrots.
 // @TODO - Easy networking.
 
-class Point {
-    x: number;
-    y: number;
-    constructor(x: number, y: number) {
-        this.x = x;
-        this.y = y;
-    }
-}
+import bdvRender from "../render/CanvasRenderer";
+import ImageDataRender from "../render/PixelRenderer";
+import Stage from "../render/Stage";
+import { Model } from "./Model";
+import GameObject from "./GameObject";
+import Dimension from "../math/Dimension";
+import Point from "../math/Point";
 
-class Dimension {
-    width: number;
-    height: number;
-    constructor(w: number, h: number) {
-        this.width = w;
-        this.height = h;
-    }
-}
-
-enum Model {
-    RECTANGLE = "RECTANGLE",
-    RECTANGLE_BORDER = "RECTANGLE_BORDER",
-    POINT = "POINT",
-    POINTS = "POINTS",
-    POINTS_BORDER = "POINTS_BORDER",
-    TRIANGLE_BORDER = "TRIANGLE_BORDER",
-    LINE = "LINE",
-    TEXT = "TEXT",
-    CIRCLE = "CIRCLE",
-    CIRCLE_BORDER = "CIRCLE_BORDER",
-    ARC = "ARC",
-}
-
-class GameObject {
-    model: Model;
-    position: Point | Point[];
-    dimension: Dimension;
-    color: string;
-    font?: string;
-    message?: string;
-    props?: any;
-    constructor(model: Model, position: Point | Point[], dimension: Dimension, color?: string, font?: string, message?: string) {
-        if (!color) color = "black"
-        this.model = model;
-        this.position = position;
-        this.dimension = dimension;
-        this.color = color;
-
-        this.font = font;
-        this.message = message;
-        this.props = {};
-    }
-
-    addProperty = (propName: string, propValue: any) => {
-        this.props[propName] = propValue;
-    }
-}
-
-class Stage {
-    queue: GameObject[];
-    constructor() {
-        this.queue = [];
-    }
-}
-
-class bdv {
+export default class bdv {
     canvasId: string;
     dimensions: Dimension;
     render: null | bdvRender;
@@ -271,250 +217,43 @@ class bdv {
             }
         }, speed || 100);
     }
-}
 
-class bdvRender extends bdv {
-    canvas: HTMLCanvasElement;
-    ctx: CanvasRenderingContext2D;
-    dimensions: Dimension;
-    defaultColor: string;
-    stage: Stage;
+    gridFromMapFile = () => {
 
-    constructor(canvasId: string, width: number, height: number) {
-        super(canvasId, width, height);
-        this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext("2d");
-        this.dimensions = new Dimension(width, height);
-        this.defaultColor = 'black';
-
-        this.stage = new Stage();
-    }
-
-    requestStage(object: GameObject) {  
-        this.stage.queue.push(object);
-        return this.stage.queue.length - 1;
-    }
-
-    removeFromStage(index: number): boolean {
-        if (!this.stage.queue[index]) return false;
-        this.stage.queue.splice(index, 1);
-        return true;
-    }
-
-    clearStage() {
-        this.stage.queue = [];
-    }
-
-    loop = () => {
-        requestAnimationFrame(this.animation);
-    }
-
-    animation = () => {
-        this.clear();
-        this.stageRenderingOrder();
-        requestAnimationFrame(this.animation);
-    }
-
-    stageRenderingOrder = () => {
-        for (let object of this.stage.queue) {
-            switch (object.model) {
-                case Model.RECTANGLE:
-                    this.fill(object);
-                    break;
-                case Model.RECTANGLE_BORDER:
-                    this.stroke(object);
-                    break;
-                case Model.POINTS:
-                case Model.POINTS_BORDER:
-                    this.path(object);
-                    break;
-                case Model.CIRCLE:
-                    break;
-                case Model.CIRCLE_BORDER:
-                    break;
-            }
-        }
-    }
-
-    clear = () => {
-        this.color('black');
-        this.ctx.fillRect(0, 0, this.dimensions.width, this.dimensions.height);
-    }
-
-    fill = (object: GameObject) => {
-        if (!object.color) object.color = this.defaultColor;
-        if (object.position instanceof Point) {
-            this.color(object.color);
-            if (object.model === Model.RECTANGLE) {
-                this.ctx.fillRect(object.position.x, object.position.y, object.dimension.width, object.dimension.height);
-            }
-            else if (object.model === Model.TEXT) {
-                this.ctx.font = object.font;
-                this.ctx.fillStyle = object.color;
-                this.ctx.fillText(object.message, object.position.x, object.position.y);
-            }
-        }
-    }
-
-    stroke = (object: GameObject) => {
-        if (!object.color) object.color = this.defaultColor;
-        this.color(object.color);
-        if (object.position instanceof Point) {
-            this.ctx.strokeStyle = object.color;
-            this.ctx.strokeRect(object.position.x, object.position.y, object.dimension.width, object.dimension.height);
-        }
-    }
-
-
-    path = (object: GameObject) => {
-        if (!object.color) object.color = this.defaultColor;
-        this.ctx.fillStyle = object.color;
-        this.ctx.beginPath();
-        let it = 0;
-
-        if (object.position instanceof Array) {
-            for (let point of object.position) {
-                if (it === 0) {
-                    this.ctx.moveTo(point.x, point.y);
-                    it++;
-                    continue;
-                }
-                this.ctx.lineTo(point.x, point.y);
-                it++;
-            }
-        }
-
-        if (object.model === Model.POINTS) {
-            this.ctx.fillStyle = object.color;
-            this.ctx.fill();
-        }
-        else if (object.model === Model.POINTS_BORDER) {
-            this.ctx.strokeStyle = object.color;
-            this.ctx.stroke();
-        }
-    }
-
-    arc = (point: Point, radius: number, type?: string, color?: string) => {
-        // Full arc - 0 to 2pi
-        this.ctx.beginPath();
-        this.ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI);
-
-        if (!type) type = "stroke";
-        if (!color) color = this.defaultColor;
-
-        if (type === "fill") {
-            this.ctx.fillStyle = color;
-            this.ctx.fill();
-        } else {
-            this.ctx.strokeStyle = color;
-            this.ctx.stroke();
-        }
-    }
-
-    color = (color: string) => {
-        this.ctx.fillStyle = color;
-    }
-
-}
-
-class ImageDataRender {
-    dimensions: Dimension;
-    canvas: HTMLCanvasElement;
-    ctx: CanvasRenderingContext2D;
-    imageData: ImageData;
-    pixelArray: Uint8ClampedArray;
-    pixels: Uint8ClampedArray[];
-    constructor(canvasId: string, dimensions: Dimension) {
-        this.dimensions = dimensions;
-        this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext("2d");
-        this.pixels = [];
-    }
-
-    start = () => {
-        this.imageData = this.ctx.createImageData(this.dimensions.width, this.dimensions.height);
-        this.pixelArray = this.imageData.data;
-        let counter = 1;
-        for (let i = 0; i < this.pixelArray.length; i++) {
-            if (counter === 4) {
-                this.pixels.push(this.pixelArray.slice(i - 3, i + 1));
-                counter = 1;
-                continue;
-            }
-            counter++;
-        }
-    }
-
-    getRandomRGBValue = () => {
-        return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)];
-    }
-
-    createPixelsScreen = () => {
-        for (let i = 0; i < this.imageData.data.length; i++) {
-            let [r] = this.getRandomRGBValue();
-            this.imageData.data[i] = 100;
-        }
-        this.ctx.putImageData(this.imageData, 0, 0);
-    }
-
-    getPixel = (index: number): Uint8ClampedArray | undefined => {
-        if (!this.pixels[index]) return undefined;
-        return this.pixels[index];
-    }
-
-    setPixel = (index: number, rgb: number[]): boolean => {
-        if (!this.getPixel(index)) return false;
-        for (let i = 0; i < rgb.length; i++) {
-            this.pixels[index][i] = rgb[i];
-        }
-
-        let innerIndex = index * 4;
-        for (let i = 0; i < rgb.length; i++) {
-            this.imageData.data[innerIndex] = rgb[i];
-            innerIndex--;
-        }
-    }
-
-    pixelDoodling = () => {
-        setInterval(() => {
-            this.imageData = this.ctx.createImageData(this.dimensions.width, this.dimensions.height);
-            let [r, g, b] = this.getRandomRGBValue();
-
-            for (let i = 0; i < this.imageData.data.length / 4; i++) {
-                // const randomPixel = Math.floor(Math.random() * (this.imageData.data.length / 4));
-                let pixel = this.getPixel(i);
-                for (let j = 0; j < pixel.length; j++) {
-                    this.setPixel(i, [r, g, b, 0]);
-                }
-            }
-            this.ctx.putImageData(this.imageData, 0, 0);
-        }, 100);
     }
 }
 
 
-window.onload = function () {
+
+window.onload = function() {
     let test = new bdv("CANVAS_ID", 1024, 768);
-    test.activateCanvasRendering();
 
-    let mySeededMatrix = [];
-    for (let i = 0; i < 10; i++) mySeededMatrix[i] = [];
+}
 
-    for (let i = 0; i < 10; i++) {
-        for (let j = 0; j < 10; j++) {
-            if (Math.floor(Math.random()*10) === 1) mySeededMatrix[i][j] = 1;
-            else mySeededMatrix[i][j] = 0;
-        }
-    }
+
+// window.onload = function () {
+    // let test = new bdv("CANVAS_ID", 1024, 768);
+    // test.activateCanvasRendering();
+
+    // let mySeededMatrix = [];
+    // for (let i = 0; i < 10; i++) mySeededMatrix[i] = [];
+
+    // for (let i = 0; i < 10; i++) {
+    //     for (let j = 0; j < 10; j++) {
+    //         if (Math.floor(Math.random()*10) === 1) mySeededMatrix[i][j] = 1;
+    //         else mySeededMatrix[i][j] = 0;
+    //     }
+    // }
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-    test.conways(150, 150, null, "green", "lightgreen", 100);
+    // test.conways(150, 150, null, "green", "lightgreen", 100);
 
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
+
     // let movingSquare = test.movingSquares();
     // let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
     // let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
     // let myGrid = test.grid(50, 50);
     // let life = test.conways(50, 50);
-}
+// }
 

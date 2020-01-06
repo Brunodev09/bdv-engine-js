@@ -1,0 +1,19 @@
+{
+  "name": "bdv-engine",
+  "version": "1.0.0",
+  "description": "A game engine.",
+  "main": "bdv.js",
+  "scripts": {
+    "start": "tsc && browserify dist/Main.js -o bundle.js && google-chrome test.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Brunodev09/bdv-engine.git"
+  },
+  "author": "brunodev09",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Brunodev09/bdv-engine/issues"
+  },
+  "homepage": "https://github.com/Brunodev09/bdv-engine#readme"
+}
