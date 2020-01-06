@@ -75,17 +75,24 @@ class bdv {
     canvasId: string;
     dimensions: Dimension;
     render: null | bdvRender;
+    render2: null | ImageDataRender;
     stage: Stage;
 
     constructor(canvasId: string, width: number, height: number) {
         this.canvasId = canvasId;
         this.dimensions = new Dimension(width, height);
         this.render = null;
+        this.render2 = null;
     }
 
     activateCanvasRendering = () => {
         this.render = new bdvRender(this.canvasId, this.dimensions.width, this.dimensions.height);
         this.game();
+    }
+
+    activateImageDataRendering = () => {
+        this.render2 = new ImageDataRender(this.canvasId, this.dimensions);
+        this.render2.start();
     }
 
     game = () => {
@@ -206,28 +213,28 @@ class bdv {
 
             const cellStatus = world[position.x][position.y].props["alive"];
 
-            if (world[position.x + 1] && world[position.x + 1][position.y] && 
+            if (world[position.x + 1] && world[position.x + 1][position.y] &&
                 world[position.x + 1][position.y].props["alive"]) neighboursCount++;
 
-            if (world[position.x - 1] && world[position.x - 1][position.y] && 
+            if (world[position.x - 1] && world[position.x - 1][position.y] &&
                 world[position.x - 1][position.y].props["alive"]) neighboursCount++;
 
-            if (world[position.x] && world[position.x][position.y + 1] && 
+            if (world[position.x] && world[position.x][position.y + 1] &&
                 world[position.x][position.y + 1].props["alive"]) neighboursCount++;
 
             if (world[position.x] && world[position.x][position.y - 1] &&
                 world[position.x][position.y - 1].props["alive"]) neighboursCount++;
 
-            if (world[position.x - 1] && world[position.x - 1][position.y + 1] && 
+            if (world[position.x - 1] && world[position.x - 1][position.y + 1] &&
                 world[position.x - 1][position.y + 1].props["alive"]) neighboursCount++;
 
-            if (world[position.x + 1] && world[position.x + 1][position.y + 1] && 
+            if (world[position.x + 1] && world[position.x + 1][position.y + 1] &&
                 world[position.x + 1][position.y + 1].props["alive"]) neighboursCount++;
 
-            if (world[position.x - 1] && world[position.x - 1][position.y - 1] && 
+            if (world[position.x - 1] && world[position.x - 1][position.y - 1] &&
                 world[position.x - 1][position.y - 1].props["alive"]) neighboursCount++;
 
-            if (world[position.x + 1] && world[position.x + 1][position.y - 1] && 
+            if (world[position.x + 1] && world[position.x + 1][position.y - 1] &&
                 world[position.x + 1][position.y - 1].props["alive"]) neighboursCount++;
 
             if (cellStatus) {
@@ -288,7 +295,7 @@ class bdvRender extends bdv {
         return this.stage.queue.length - 1;
     }
 
-    removeFromStage(index: number) : boolean {
+    removeFromStage(index: number): boolean {
         if (!this.stage.queue[index]) return false;
         this.stage.queue.splice(index, 1);
         return true;
@@ -410,14 +417,90 @@ class bdvRender extends bdv {
 
 }
 
+class ImageDataRender {
+    dimensions: Dimension;
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    imageData: ImageData;
+    pixelArray: Uint8ClampedArray;
+    pixels: Uint8ClampedArray[];
+    constructor(canvasId: string, dimensions: Dimension) {
+        this.dimensions = dimensions;
+        this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext("2d");
+        this.pixels = [];
+    }
+
+    start = () => {
+        this.imageData = this.ctx.createImageData(this.dimensions.width, this.dimensions.height);
+        this.pixelArray = this.imageData.data;
+        let counter = 1;
+        for (let i = 0; i < this.pixelArray.length; i++) {
+            if (counter === 4) {
+                this.pixels.push(this.pixelArray.slice(i - 3, i + 1));
+                counter = 1;
+                continue;
+            }
+            counter++;
+        }
+    }
+
+    getRandomRGBValue = () => {
+        return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)];
+    }
+
+    createPixelsScreen = () => {
+        for (let i = 0; i < this.imageData.data.length; i++) {
+            let [r] = this.getRandomRGBValue();
+            this.imageData.data[i] = 100;
+        }
+        this.ctx.putImageData(this.imageData, 0, 0);
+    }
+
+    getPixel = (index: number): Uint8ClampedArray | undefined => {
+        if (!this.pixels[index]) return undefined;
+        return this.pixels[index];
+    }
+
+    setPixel = (index: number, rgb: number[]): boolean => {
+        if (!this.getPixel(index)) return false;
+        for (let i = 0; i < rgb.length; i++) {
+            this.pixels[index][i] = rgb[i];
+        }
+
+        let innerIndex = index * 4;
+        for (let i = 0; i < rgb.length; i++) {
+            this.imageData.data[innerIndex] = rgb[i];
+            innerIndex--;
+        }
+    }
+
+    pixelDoodling = () => {
+        setInterval(() => {
+            this.imageData = this.ctx.createImageData(this.dimensions.width, this.dimensions.height);
+            let [r, g, b] = this.getRandomRGBValue();
+
+            for (let i = 0; i < this.imageData.data.length / 4; i++) {
+                // const randomPixel = Math.floor(Math.random() * (this.imageData.data.length / 4));
+                let pixel = this.getPixel(i);
+                for (let j = 0; j < pixel.length; j++) {
+                    this.setPixel(i, [r, g, b, 0]);
+                }
+            }
+            this.ctx.putImageData(this.imageData, 0, 0);
+        }, 100);
+    }
+}
+
 
 window.onload = function () {
     let test = new bdv("CANVAS_ID", 1024, 768);
-    test.activateCanvasRendering();
+    test.activateImageDataRendering();
+    test.render2.pixelDoodling();
     // let movingSquare = test.movingSquares();
     // let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
     // let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
     // let myGrid = test.grid(50, 50);
-    let life = test.conways(50, 50);
+    // let life = test.conways(50, 50);
 }
 
