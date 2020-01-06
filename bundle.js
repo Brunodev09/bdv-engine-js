@@ -1,15 +1,13 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-var bdv_1 = __importDefault(require("./core/bdv"));
+let bdv = require("./dist/core/bdv").default;
+console.log(bdv)
 window.onload = function () {
-    var test = new bdv_1.default("CANVAS_ID", 1024, 768);
+    let test = new bdv("CANVAS_ID", 1024, 768);
     test.activateCanvasRendering();
+
     // let mySeededMatrix = [];
     // for (let i = 0; i < 10; i++) mySeededMatrix[i] = [];
+
     // for (let i = 0; i < 10; i++) {
     //     for (let j = 0; j < 10; j++) {
     //         if (Math.floor(Math.random()*10) === 1) mySeededMatrix[i][j] = 1;
@@ -18,16 +16,18 @@ window.onload = function () {
     // }
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
     test.conways(150, 150, null, "green", "lightgreen", 100);
+
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
+
     // let movingSquare = test.movingSquares();
     // let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
     // let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
     // let myGrid = test.grid(50, 50);
     // let life = test.conways(50, 50);
-};
+}
 
-},{"./core/bdv":4}],2:[function(require,module,exports){
+},{"./dist/core/bdv":4}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var GameObject = /** @class */ (function () {
@@ -71,6 +71,7 @@ var Model;
 },{}],4:[function(require,module,exports){
 "use strict";
 // @TODO - Load tiled map from JSON, Algos and graphs.
+// @TODO - Finish porting shape based rendering to GameObject -> Stages (Circles, arcs and fonts).
 // @TODO - Dungeon generator.
 // @TODO - Nodejs tool that reads a image file and converts it a color-mapped JSON.
 // @TODO - Handling images.
@@ -276,30 +277,6 @@ var bdv = /** @class */ (function () {
     return bdv;
 }());
 exports.default = bdv;
-window.onload = function () {
-    var test = new bdv("CANVAS_ID", 1024, 768);
-};
-// window.onload = function () {
-// let test = new bdv("CANVAS_ID", 1024, 768);
-// test.activateCanvasRendering();
-// let mySeededMatrix = [];
-// for (let i = 0; i < 10; i++) mySeededMatrix[i] = [];
-// for (let i = 0; i < 10; i++) {
-//     for (let j = 0; j < 10; j++) {
-//         if (Math.floor(Math.random()*10) === 1) mySeededMatrix[i][j] = 1;
-//         else mySeededMatrix[i][j] = 0;
-//     }
-// }
-// test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-// test.conways(150, 150, null, "green", "lightgreen", 100);
-// test.activateImageDataRendering();
-// test.render2.pixelDoodling();
-// let movingSquare = test.movingSquares();
-// let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
-// let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
-// let myGrid = test.grid(50, 50);
-// let life = test.conways(50, 50);
-// }
 
 },{"../math/Dimension":5,"../math/Point":6,"../render/CanvasRenderer":7,"../render/PixelRenderer":8,"./GameObject":2,"./Model":3}],5:[function(require,module,exports){
 "use strict";
