@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/Brunodev09/bdv-engine/issues"
   },
-  "homepage": "https://github.com/Brunodev09/bdv-engine#readme"
+  "homepage": "https://github.com/Brunodev09/bdv-engine#readme",
+  "dependencies": {
+    "browserify": "^16.5.0"
+  }
 }
