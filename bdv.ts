@@ -83,7 +83,7 @@ class bdv {
         this.render = null;
     }
 
-    start = () => {
+    activateCanvasRendering = () => {
         this.render = new bdvRender(this.canvasId, this.dimensions.width, this.dimensions.height);
         this.game();
     }
@@ -177,20 +177,25 @@ class bdv {
         // Any live cell with more than three live neighbours dies, as if by overpopulation.
         // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
 
-        let matrix = [], tracker = [];
+        let matrix = [], bufferMatrix = [];
         const tileSize = new Dimension(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
 
         for (let i = 0; i < xRow; i++) matrix[i] = new Array(yRow);
+        for (let i = 0; i < xRow; i++) bufferMatrix[i] = new Array(yRow);
 
         for (let i = 0; i < matrix.length; i++) {
             for (let j = 0; j < matrix[i].length; j++) {
                 if (Math.floor(Math.random() * 10) === 1) {
                     matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "black");
                     matrix[i][j].addProperty("alive", true);
+                    bufferMatrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "black");
+                    bufferMatrix[i][j].addProperty("alive", true);
                 }
                 else {
                     matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "white");
                     matrix[i][j].addProperty("alive", false);
+                    bufferMatrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "white");
+                    bufferMatrix[i][j].addProperty("alive", false);
                 }
                 this.render.requestStage(matrix[i][j]);
             }
@@ -235,20 +240,26 @@ class bdv {
         }
 
         setInterval(() => {
-            let aliveCount = 0, deadCount = 0;
+            this.render.clearStage();
             for (let i = 0; i < matrix.length; i++) {
                 for (let j = 0; j < matrix.length; j++) {
                     let alive = isAlive(new Point(i, j), matrix);
                     if (alive) {
-                        aliveCount++;
-                        matrix[i][j].color = "black";
-                        matrix[i][j].props["alive"] = true;
+                        bufferMatrix[i][j].color = "black";
+                        bufferMatrix[i][j].props["alive"] = true;
                     }
                     else {
-                        deadCount++;
-                        matrix[i][j].props["alive"] = false;
-                        matrix[i][j].color = "white";
+                        bufferMatrix[i][j].props["alive"] = false;
+                        bufferMatrix[i][j].color = "white";
                     }
+                    this.render.requestStage(matrix[i][j]);
+                }
+            }
+            // Matching properties from bufferedMatrix and matrix without losing reference.
+            for (let i = 0; i < matrix.length; i++) {
+                for (let j = 0; j < matrix.length; j++) {
+                    matrix[i][j].color = bufferMatrix[i][j].color;
+                    matrix[i][j].props["alive"] = bufferMatrix[i][j].props["alive"];
                 }
             }
         }, 100);
@@ -274,6 +285,17 @@ class bdvRender extends bdv {
 
     requestStage(object: GameObject) {
         this.stage.queue.push(object);
+        return this.stage.queue.length - 1;
+    }
+
+    removeFromStage(index: number) : boolean {
+        if (!this.stage.queue[index]) return false;
+        this.stage.queue.splice(index, 1);
+        return true;
+    }
+
+    clearStage() {
+        this.stage.queue = [];
     }
 
     loop = () => {
@@ -391,10 +413,11 @@ class bdvRender extends bdv {
 
 window.onload = function () {
     let test = new bdv("CANVAS_ID", 1024, 768);
-    test.start();
+    test.activateCanvasRendering();
     // let movingSquare = test.movingSquares();
     // let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
     // let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
     // let myGrid = test.grid(50, 50);
     let life = test.conways(50, 50);
 }
+
