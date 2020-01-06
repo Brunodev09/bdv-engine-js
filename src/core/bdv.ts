@@ -15,6 +15,8 @@ import GameObject from "./GameObject";
 import Dimension from "../math/Dimension";
 import Point from "../math/Point";
 
+import mapFile from "../../map.json";
+
 export default class bdv {
     canvasId: string;
     dimensions: Dimension;
@@ -220,7 +222,7 @@ export default class bdv {
     }
 
     gridFromMapFile = () => {
-
+        console.log(mapFile);
     }
 }
 

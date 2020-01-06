@@ -1,9 +1,9 @@
-let bdv = require("./dist/core/bdv").default;
+let bdv = require("./dist/src/core/bdv").default;
 
 window.onload = function () {
     let test = new bdv("CANVAS_ID", 1024, 768);
     test.activateCanvasRendering();
-
+    test.gridFromMapFile();
     // let mySeededMatrix = [];
     // for (let i = 0; i < 10; i++) mySeededMatrix[i] = [];
 
@@ -14,7 +14,7 @@ window.onload = function () {
     //     }
     // }
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-    test.conways(150, 150, null, "green", "lightgreen", 100);
+    test.conways(15, 15, null, "green", "lightgreen", 100);
 
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();

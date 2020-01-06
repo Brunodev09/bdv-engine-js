@@ -1,10 +1,10 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-let bdv = require("./dist/core/bdv").default;
-console.log(bdv)
+let bdv = require("./dist/src/core/bdv").default;
+
 window.onload = function () {
     let test = new bdv("CANVAS_ID", 1024, 768);
     test.activateCanvasRendering();
-
+    test.gridFromMapFile();
     // let mySeededMatrix = [];
     // for (let i = 0; i < 10; i++) mySeededMatrix[i] = [];
 
@@ -15,7 +15,7 @@ window.onload = function () {
     //     }
     // }
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-    test.conways(150, 150, null, "green", "lightgreen", 100);
+    test.conways(15, 15, null, "green", "lightgreen", 100);
 
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
@@ -27,7 +27,21 @@ window.onload = function () {
     // let life = test.conways(50, 50);
 }
 
-},{"./dist/core/bdv":4}],2:[function(require,module,exports){
+},{"./dist/src/core/bdv":5}],2:[function(require,module,exports){
+module.exports={
+    "charsMap": { "#": "green", "S": "grey", "W": "blue" },
+    "map": [["#", "#", "#", "#", "#", "#", "#", "#"],
+        ["W", "#", "#", "#", "#", "#", "#", "W"],
+        ["#", "#", "#", "#", "#", "#", "#", "W"],
+        ["#", "#", "#", "S", "S", "#", "#", "W"],
+        ["#", "#", "#", "S", "S", "#", "#", "#"],
+        ["#", "#", "#", "#", "#", "#", "#", "#"],
+        ["#", "#", "#", "#", "#", "#", "#", "#"],
+        ["#", "#", "#", "#", "#", "#", "#", "#"],
+        ["#", "#", "#", "#", "#", "#", "#", "#"]]
+}
+
+},{}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var GameObject = /** @class */ (function () {
@@ -50,7 +64,7 @@ var GameObject = /** @class */ (function () {
 }());
 exports.default = GameObject;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Model;
@@ -68,7 +82,7 @@ var Model;
     Model["ARC"] = "ARC";
 })(Model = exports.Model || (exports.Model = {}));
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 // @TODO - Load tiled map from JSON, Algos and graphs.
 // @TODO - Finish porting shape based rendering to GameObject -> Stages (Circles, arcs and fonts).
@@ -88,6 +102,7 @@ var Model_1 = require("./Model");
 var GameObject_1 = __importDefault(require("./GameObject"));
 var Dimension_1 = __importDefault(require("../math/Dimension"));
 var Point_1 = __importDefault(require("../math/Point"));
+var map_json_1 = __importDefault(require("../../map.json"));
 var bdv = /** @class */ (function () {
     function bdv(canvasId, width, height) {
         var _this = this;
@@ -168,6 +183,7 @@ var bdv = /** @class */ (function () {
             return tracker;
         };
         this.gridFromMapFile = function () {
+            console.log(map_json_1.default);
         };
         this.canvasId = canvasId;
         this.dimensions = new Dimension_1.default(width, height);
@@ -278,7 +294,7 @@ var bdv = /** @class */ (function () {
 }());
 exports.default = bdv;
 
-},{"../math/Dimension":5,"../math/Point":6,"../render/CanvasRenderer":7,"../render/PixelRenderer":8,"./GameObject":2,"./Model":3}],5:[function(require,module,exports){
+},{"../../map.json":2,"../math/Dimension":6,"../math/Point":7,"../render/CanvasRenderer":8,"../render/PixelRenderer":9,"./GameObject":3,"./Model":4}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Dimension = /** @class */ (function () {
@@ -290,7 +306,7 @@ var Dimension = /** @class */ (function () {
 }());
 exports.default = Dimension;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Point = /** @class */ (function () {
@@ -302,7 +318,7 @@ var Point = /** @class */ (function () {
 }());
 exports.default = Point;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -443,7 +459,7 @@ var bdvRender = /** @class */ (function () {
 }());
 exports.default = bdvRender;
 
-},{"../core/Model":3,"../math/Dimension":5,"../math/Point":6,"./Stage":9}],8:[function(require,module,exports){
+},{"../core/Model":4,"../math/Dimension":6,"../math/Point":7,"./Stage":10}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var ImageDataRender = /** @class */ (function () {
@@ -512,7 +528,7 @@ var ImageDataRender = /** @class */ (function () {
 }());
 exports.default = ImageDataRender;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Stage = /** @class */ (function () {
