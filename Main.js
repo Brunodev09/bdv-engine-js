@@ -1,4 +1,4 @@
-import bdv from "./core/bdv";
+let bdv = require("./dist/core/bdv").default;
 
 window.onload = function () {
     let test = new bdv("CANVAS_ID", 1024, 768);
