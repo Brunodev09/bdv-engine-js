@@ -1,11 +1,8 @@
-// Using shapes:
-// @TODO - Load map from JSON, Conway's game of Life, Algos and graphs.
-
-// Reading images:
-// Still thinking...
-
+// @TODO - Load tiled map from JSON, Conway's game of Life, Algos and graphs.
+// @TODO - Nodejs tool that reads a image file and converts it a color-mapped JSON.
+// @TODO - Collidables.
+// @TODO - Expand pixel rendering, perlin noise and mandelbrots.
 // @TODO - Easy networking.
-
 
 class Point {
     x: number;
@@ -177,31 +174,34 @@ class bdv {
         return tracker;
     }
 
-    conways(xRow: number, yRow: number) {
+    conways(xRow: number, yRow: number, initialSeed?: any[][], aliveColor?: string, deadColor?: string, speed?: number) {
 
         // Any live cell with fewer than two live neighbours dies, as if by underpopulation.
         // Any live cell with two or three live neighbours lives on to the next generation.
         // Any live cell with more than three live neighbours dies, as if by overpopulation.
         // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
 
-        let matrix = [], bufferMatrix = [];
+        let matrix = initialSeed, bufferMatrix = [];
         const tileSize = new Dimension(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
 
-        for (let i = 0; i < xRow; i++) matrix[i] = new Array(yRow);
+        if (!initialSeed) {
+            matrix = [];
+            for (let i = 0; i < xRow; i++) matrix[i] = new Array(yRow);
+        }
         for (let i = 0; i < xRow; i++) bufferMatrix[i] = new Array(yRow);
 
         for (let i = 0; i < matrix.length; i++) {
             for (let j = 0; j < matrix[i].length; j++) {
-                if (Math.floor(Math.random() * 10) === 1) {
-                    matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "black");
+                if (matrix[i][j] === 1 || Math.floor(Math.random() * 10) === 1) {
+                    matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), aliveColor || "black");
                     matrix[i][j].addProperty("alive", true);
-                    bufferMatrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "black");
+                    bufferMatrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), aliveColor || "black");
                     bufferMatrix[i][j].addProperty("alive", true);
                 }
                 else {
-                    matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "white");
+                    matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), deadColor || "white");
                     matrix[i][j].addProperty("alive", false);
-                    bufferMatrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "white");
+                    bufferMatrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), deadColor || "white");
                     bufferMatrix[i][j].addProperty("alive", false);
                 }
                 this.render.requestStage(matrix[i][j]);
@@ -252,12 +252,12 @@ class bdv {
                 for (let j = 0; j < matrix.length; j++) {
                     let alive = isAlive(new Point(i, j), matrix);
                     if (alive) {
-                        bufferMatrix[i][j].color = "black";
+                        bufferMatrix[i][j].color = aliveColor || "black";
                         bufferMatrix[i][j].props["alive"] = true;
                     }
                     else {
                         bufferMatrix[i][j].props["alive"] = false;
-                        bufferMatrix[i][j].color = "white";
+                        bufferMatrix[i][j].color = deadColor || "white";
                     }
                     this.render.requestStage(matrix[i][j]);
                 }
@@ -269,7 +269,7 @@ class bdv {
                     matrix[i][j].props["alive"] = bufferMatrix[i][j].props["alive"];
                 }
             }
-        }, 100);
+        }, speed || 100);
     }
 }
 
@@ -290,7 +290,7 @@ class bdvRender extends bdv {
         this.stage = new Stage();
     }
 
-    requestStage(object: GameObject) {
+    requestStage(object: GameObject) {  
         this.stage.queue.push(object);
         return this.stage.queue.length - 1;
     }
@@ -495,8 +495,22 @@ class ImageDataRender {
 
 window.onload = function () {
     let test = new bdv("CANVAS_ID", 1024, 768);
-    test.activateImageDataRendering();
-    test.render2.pixelDoodling();
+    test.activateCanvasRendering();
+
+    let mySeededMatrix = [];
+    for (let i = 0; i < 10; i++) mySeededMatrix[i] = [];
+
+    for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 10; j++) {
+            if (Math.floor(Math.random()*10) === 1) mySeededMatrix[i][j] = 1;
+            else mySeededMatrix[i][j] = 0;
+        }
+    }
+    // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
+    test.conways(150, 150, null, "green", "lightgreen", 100);
+
+    // test.activateImageDataRendering();
+    // test.render2.pixelDoodling();
     // let movingSquare = test.movingSquares();
     // let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
     // let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
