@@ -5,7 +5,9 @@ window.onload = function () {
     let test = new bdv("CANVAS_ID", 1024, 768);
     test.activateCanvasRendering();
     // test.grid(10, 10);
-    test.aStar(25, 25);
+    // test.aStar(25, 25, 10, 12, 8, 12);
+    test.aStar(25, 25, null, null, null, null, 100, null);
+
     // test.gridFromMapFile();
     // let mySeededMatrix = [];
     // for (let i = 0; i < 10; i++) mySeededMatrix[i] = [];
@@ -341,210 +343,251 @@ var bdv = /** @class */ (function () {
             }
         }, speed || 100);
     };
-    bdv.prototype.aStar = function (xRow, yRow, xStart, yStart, xEnd, yEnd, seed) {
-        // Gcost = distance from current node to the start node.
-        // Hcost = distance from current node to the end node.
-        // Fcost = Gcost + Hcost.
-        // Compute G, H and F for every surrounding start node (8 positions) and choose the one with the lowest Fcost.
-        var _this = this;
-        // Don't forget edge case when start === end
-        // Edge cases of truthyness of 0
-        if (xStart && yStart && xEnd && yEnd && xStart === xEnd && yStart === yEnd)
-            return null;
-        var matrix = [], tracker = [];
-        var start = xStart && yStart ? new Point_1.default(xStart, yStart) : new Point_1.default(Math.floor(Math.random() * xRow) + 1, Math.floor(Math.random() * yRow) + 1);
-        var end = xEnd && yEnd ? new Point_1.default(xEnd, yEnd) : new Point_1.default(Math.floor(Math.random() * xRow) + 1, Math.floor(Math.random() * yRow) + 1);
-        var tileSize = new Dimension_1.default(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
-        var currentNode, endNode, startNode, fCosts = [];
-        for (var i = 0; i <= xRow; i++)
-            matrix[i] = new Array(yRow);
-        for (var i = 0; i < matrix.length; i++) {
-            for (var j = 0; j < matrix[i].length; j++) {
-                if (i === start.x && j === start.y)
-                    matrix[i][j] = 2;
-                else if (i === end.x && j === end.y)
-                    matrix[i][j] = 3;
-                else if (Math.floor(Math.random() * 10) === 1)
-                    matrix[i][j] = 4;
-                else
-                    matrix[i][j] = 1;
-            }
-        }
-        for (var i = 0; i < matrix.length; i++) {
-            for (var j = 0; j < matrix[i].length; j++) {
-                var object = void 0;
-                if (matrix[i][j] === 1) {
-                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "white");
-                    object.addProperty("coords", new Point_1.default(i, j));
-                }
-                else if (matrix[i][j] === 2) {
-                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "blue");
-                    object.addProperty("start", true);
-                    object.addProperty("coords", new Point_1.default(i, j));
-                    startNode = object;
-                    currentNode = object;
-                }
-                else if (matrix[i][j] === 3) {
-                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "red");
-                    object.addProperty("end", true);
-                    object.addProperty("coords", new Point_1.default(i, j));
-                    endNode = object;
-                }
-                else {
-                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "black");
-                    object.addProperty("wall", true);
-                    object.addProperty("coords", new Point_1.default(i, j));
-                }
-                this.render.requestStage(object);
-                tracker.push(object);
-            }
-        }
-        var findGameObjectByCoordinate = function (point) {
-            var found = null;
-            for (var _i = 0, tracker_1 = tracker; _i < tracker_1.length; _i++) {
-                var obj = tracker_1[_i];
-                if (obj.props["coords"].x === point.x && obj.props["coords"].y === point.y) {
-                    found = obj;
-                    break;
-                }
-            }
-            return found;
-        };
-        var addCostsToGameObject = function (startPoint, endPoint, pointToTest) {
-            var d = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x, pointToTest.y), startPoint);
-            var d2 = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x, pointToTest.y), endPoint);
-            var f = d + d2;
-            var foundGameObject = findGameObjectByCoordinate(pointToTest);
-            if (foundGameObject) {
-                foundGameObject.addProperty("gCost", d);
-                foundGameObject.addProperty("hCost", d2);
-                foundGameObject.addProperty("fCost", f);
-                if (!foundGameObject.props.wall && !foundGameObject.props.closed && !foundGameObject.props.start && !foundGameObject.props.end) {
-                    foundGameObject.color = "lightgreen";
-                }
-                else if (foundGameObject.props.end) {
-                    foundGameObject.color = "lightblue";
-                    startNode.color = "lightblue";
-                    for (var _i = 0, tracker_2 = tracker; _i < tracker_2.length; _i++) {
-                        var obj = tracker_2[_i];
-                        if (obj.props["closed"])
-                            obj.color = "lightblue";
-                    }
-                }
-            }
-            return foundGameObject;
-        };
-        var isRepeated = function (point) {
-            for (var _i = 0, fCosts_1 = fCosts; _i < fCosts_1.length; _i++) {
-                var obj = fCosts_1[_i];
-                if (obj.props["coords"].x === point.x && obj.props["coords"].y === point.y) {
-                    return true;
-                }
-            }
-            return false;
-        };
-        var calculateCosts = function (point) {
-            var startPoint = new Point_1.default(startNode.props["coords"].x, startNode.props["coords"].y);
-            var endPoint = new Point_1.default(endNode.props["coords"].x, endNode.props["coords"].y);
-            var returnedGameObject;
-            if (matrix[point.x + 1] && matrix[point.x + 1][point.y]) {
-                if (matrix[point.x + 1][point.y] !== 4) {
-                    var object = addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y));
-                    if (!isRepeated(new Point_1.default(point.x + 1, point.y)))
-                        fCosts.push(object);
-                }
-            }
-            if (matrix[point.x - 1] && matrix[point.x - 1][point.y]) {
-                if (matrix[point.x - 1][point.y] !== 4) {
-                    var object = addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y));
-                    if (!isRepeated(new Point_1.default(point.x - 1, point.y)))
-                        fCosts.push(object);
-                }
-            }
-            if (matrix[point.x] && matrix[point.x][point.y + 1]) {
-                if (matrix[point.x][point.y + 1] !== 4) {
-                    var object = addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y + 1));
-                    if (!isRepeated(new Point_1.default(point.x, point.y + 1)))
-                        fCosts.push(object);
-                }
-            }
-            if (matrix[point.x] && matrix[point.x][point.y - 1]) {
-                if (matrix[point.x][point.y - 1] !== 4) {
-                    var object = addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y - 1));
-                    if (!isRepeated(new Point_1.default(point.x, point.y - 1)))
-                        fCosts.push(object);
-                }
-            }
-            if (matrix[point.x - 1] && matrix[point.x - 1][point.y + 1]) {
-                if (matrix[point.x - 1][point.y + 1] !== 4) {
-                    var object = addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y + 1));
-                    if (!isRepeated(new Point_1.default(point.x - 1, point.y + 1)))
-                        fCosts.push(object);
-                }
-            }
-            if (matrix[point.x + 1] && matrix[point.x + 1][point.y + 1]) {
-                if (matrix[point.x + 1][point.y + 1] !== 4) {
-                    var object = addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y + 1));
-                    if (!isRepeated(new Point_1.default(point.x + 1, point.y + 1)))
-                        fCosts.push(object);
-                }
-            }
-            if (matrix[point.x - 1] && matrix[point.x - 1][point.y - 1]) {
-                if (matrix[point.x - 1][point.y - 1] !== 4) {
-                    var object = addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y - 1));
-                    if (!isRepeated(new Point_1.default(point.x - 1, point.y - 1)))
-                        fCosts.push(object);
-                }
-            }
-            if (matrix[point.x + 1] && matrix[point.x + 1][point.y - 1]) {
-                if (matrix[point.x + 1][point.y - 1] !== 4) {
-                    var object = addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y - 1));
-                    if (!isRepeated(new Point_1.default(point.x + 1, point.y - 1)))
-                        fCosts.push(object);
-                }
-            }
-            fCosts.sort(function (a, b) {
-                var weightA = 0, weightB = 0;
-                if (b.props["fCost"] === a.props["fCost"]) {
-                    // @TODO - On this first if, it doesn't matter if it's A or B. It's a draw. Add randomness later.
-                    if (b.props["hCost"] === a.props["hCost"])
-                        weightA += 500;
-                    else if (b.props["hCost"] < a.props["hCost"])
-                        weightB += 500;
-                    else
-                        weightA += 500;
-                }
-                else if (b.props["fCost"] > a.props["fCost"])
-                    weightA += 500;
-                else if (b.props["fCost"] < a.props["fCost"])
-                    weightB += 500;
-                return weightB - weightA;
-            });
-            if (!fCosts[0].props.start && !fCosts[0].props.end && !fCosts[0].props.wall && !fCosts[0].props.closed) {
-                fCosts[0].color = "pink";
-                fCosts[0].addProperty("closed", true);
-            }
-            returnedGameObject = __assign({}, fCosts[0]);
-            // @TODO - Bug is here. Slice not slicing. 
-            console.log("before", fCosts.length);
-            fCosts.shift();
-            console.log("after", fCosts.length);
-            return returnedGameObject;
-        };
-        var interval = setInterval(function () { return __awaiter(_this, void 0, void 0, function () {
+    bdv.prototype.aStar = function (xRow, yRow, xStart, yStart, xEnd, yEnd, speed, seed) {
+        return __awaiter(this, void 0, void 0, function () {
+            var matrix, tracker, start, end, tileSize, currentNode, endNode, startNode, fCosts, i, i, j, i, j, object, findGameObjectByCoordinate, addCostsToGameObject, isRepeated, closed, calculateCosts;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (!!currentNode.props["end"]) return [3 /*break*/, 2];
-                        return [4 /*yield*/, Sleep_1.default.now(100)];
+                        // Gcost = distance from current node to the start node.
+                        // Hcost = distance from current node to the end node.
+                        // Fcost = Gcost + Hcost.
+                        // Compute G, H and F for every surrounding start node (8 positions) and choose the one with the lowest Fcost.
+                        if (xStart && yStart && xEnd && yEnd && xStart === xEnd && yStart === yEnd)
+                            return [2 /*return*/, null];
+                        matrix = [], tracker = [];
+                        start = xStart !== null && yStart !== null ? new Point_1.default(xStart, yStart) : new Point_1.default(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow));
+                        end = xEnd !== null && yEnd !== null ? new Point_1.default(xEnd, yEnd) : new Point_1.default(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow));
+                        tileSize = new Dimension_1.default(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
+                        fCosts = [];
+                        for (i = 0; i < xRow; i++)
+                            matrix[i] = new Array(yRow);
+                        for (i = 0; i < matrix.length; i++) {
+                            for (j = 0; j < matrix[i].length; j++) {
+                                if (i === start.x && j === start.y)
+                                    matrix[i][j] = 2;
+                                else if (i === end.x && j === end.y)
+                                    matrix[i][j] = 3;
+                                else if (Math.floor(Math.random() * 10) < 3)
+                                    matrix[i][j] = 4;
+                                else
+                                    matrix[i][j] = 1;
+                            }
+                        }
+                        for (i = 0; i < matrix.length; i++) {
+                            for (j = 0; j < matrix[i].length; j++) {
+                                object = void 0;
+                                if (matrix[i][j] === 1) {
+                                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "white");
+                                    object.addProperty("coords", new Point_1.default(i, j));
+                                }
+                                else if (matrix[i][j] === 2) {
+                                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "blue");
+                                    object.addProperty("start", true);
+                                    object.addProperty("coords", new Point_1.default(i, j));
+                                    startNode = object;
+                                    currentNode = object;
+                                }
+                                else if (matrix[i][j] === 3) {
+                                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "red");
+                                    object.addProperty("end", true);
+                                    object.addProperty("coords", new Point_1.default(i, j));
+                                    endNode = object;
+                                }
+                                else {
+                                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "black");
+                                    object.addProperty("wall", true);
+                                    object.addProperty("coords", new Point_1.default(i, j));
+                                }
+                                this.render.requestStage(object);
+                                tracker.push(object);
+                            }
+                        }
+                        findGameObjectByCoordinate = function (point) {
+                            var found = null;
+                            for (var _i = 0, tracker_1 = tracker; _i < tracker_1.length; _i++) {
+                                var obj = tracker_1[_i];
+                                if (obj.props["coords"].x === point.x && obj.props["coords"].y === point.y) {
+                                    found = obj;
+                                    break;
+                                }
+                            }
+                            return found;
+                        };
+                        addCostsToGameObject = function (startPoint, endPoint, pointToTest) { return __awaiter(_this, void 0, void 0, function () {
+                            var d, d2, f, foundGameObject, _i, tracker_2, obj;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        d = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x, pointToTest.y), new Point_1.default(currentNode.props.coords.x, currentNode.props.coords.y)) +
+                                            Geometry_1.default.distanceBetweenPoints(new Point_1.default(currentNode.props.coords.x, currentNode.props.coords.y), startPoint);
+                                        d2 = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x, pointToTest.y), endPoint);
+                                        f = d + d2;
+                                        foundGameObject = findGameObjectByCoordinate(pointToTest);
+                                        if (!foundGameObject) return [3 /*break*/, 6];
+                                        foundGameObject.addProperty("gCost", d);
+                                        foundGameObject.addProperty("hCost", d2);
+                                        foundGameObject.addProperty("fCost", f);
+                                        if (!(!foundGameObject.props.wall && !foundGameObject.props.closed && !foundGameObject.props.start && !foundGameObject.props.end)) return [3 /*break*/, 1];
+                                        foundGameObject.color = "lightgreen";
+                                        return [3 /*break*/, 6];
+                                    case 1:
+                                        if (!foundGameObject.props.end) return [3 /*break*/, 6];
+                                        startNode.color = "lightblue";
+                                        _i = 0, tracker_2 = tracker;
+                                        _a.label = 2;
+                                    case 2:
+                                        if (!(_i < tracker_2.length)) return [3 /*break*/, 5];
+                                        obj = tracker_2[_i];
+                                        if (!obj.props["closed"]) return [3 /*break*/, 4];
+                                        obj.color = "lightblue";
+                                        return [4 /*yield*/, Sleep_1.default.now(Math.round(speed / 3))];
+                                    case 3:
+                                        _a.sent();
+                                        _a.label = 4;
+                                    case 4:
+                                        _i++;
+                                        return [3 /*break*/, 2];
+                                    case 5:
+                                        foundGameObject.color = "lightblue";
+                                        _a.label = 6;
+                                    case 6: return [2 /*return*/, foundGameObject];
+                                }
+                            });
+                        }); };
+                        isRepeated = function (point) {
+                            for (var _i = 0, fCosts_1 = fCosts; _i < fCosts_1.length; _i++) {
+                                var obj = fCosts_1[_i];
+                                if (obj.props["coords"].x === point.x && obj.props["coords"].y === point.y) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        };
+                        closed = function (gameObject) {
+                            return !!gameObject.props.closed;
+                        };
+                        calculateCosts = function (point) { return __awaiter(_this, void 0, void 0, function () {
+                            var startPoint, endPoint, returnedGameObject, object, object, object, object, object, object, object, object;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        startPoint = new Point_1.default(startNode.props["coords"].x, startNode.props["coords"].y);
+                                        endPoint = new Point_1.default(endNode.props["coords"].x, endNode.props["coords"].y);
+                                        if (!(matrix[point.x + 1] && matrix[point.x + 1][point.y])) return [3 /*break*/, 2];
+                                        if (!(matrix[point.x + 1][point.y] !== 4)) return [3 /*break*/, 2];
+                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y))];
+                                    case 1:
+                                        object = _a.sent();
+                                        if (!isRepeated(new Point_1.default(point.x + 1, point.y)) && !closed(object))
+                                            fCosts.push(object);
+                                        _a.label = 2;
+                                    case 2:
+                                        if (!(matrix[point.x - 1] && matrix[point.x - 1][point.y])) return [3 /*break*/, 4];
+                                        if (!(matrix[point.x - 1][point.y] !== 4)) return [3 /*break*/, 4];
+                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y))];
+                                    case 3:
+                                        object = _a.sent();
+                                        if (!isRepeated(new Point_1.default(point.x - 1, point.y)) && !closed(object))
+                                            fCosts.push(object);
+                                        _a.label = 4;
+                                    case 4:
+                                        if (!(matrix[point.x] && matrix[point.x][point.y + 1])) return [3 /*break*/, 6];
+                                        if (!(matrix[point.x][point.y + 1] !== 4)) return [3 /*break*/, 6];
+                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y + 1))];
+                                    case 5:
+                                        object = _a.sent();
+                                        if (!isRepeated(new Point_1.default(point.x, point.y + 1)) && !closed(object))
+                                            fCosts.push(object);
+                                        _a.label = 6;
+                                    case 6:
+                                        if (!(matrix[point.x] && matrix[point.x][point.y - 1])) return [3 /*break*/, 8];
+                                        if (!(matrix[point.x][point.y - 1] !== 4)) return [3 /*break*/, 8];
+                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y - 1))];
+                                    case 7:
+                                        object = _a.sent();
+                                        if (!isRepeated(new Point_1.default(point.x, point.y - 1)) && !closed(object))
+                                            fCosts.push(object);
+                                        _a.label = 8;
+                                    case 8:
+                                        if (!(matrix[point.x - 1] && matrix[point.x - 1][point.y + 1])) return [3 /*break*/, 10];
+                                        if (!(matrix[point.x - 1][point.y + 1] !== 4)) return [3 /*break*/, 10];
+                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y + 1))];
+                                    case 9:
+                                        object = _a.sent();
+                                        if (!isRepeated(new Point_1.default(point.x - 1, point.y + 1)) && !closed(object))
+                                            fCosts.push(object);
+                                        _a.label = 10;
+                                    case 10:
+                                        if (!(matrix[point.x + 1] && matrix[point.x + 1][point.y + 1])) return [3 /*break*/, 12];
+                                        if (!(matrix[point.x + 1][point.y + 1] !== 4)) return [3 /*break*/, 12];
+                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y + 1))];
+                                    case 11:
+                                        object = _a.sent();
+                                        if (!isRepeated(new Point_1.default(point.x + 1, point.y + 1)) && !closed(object))
+                                            fCosts.push(object);
+                                        _a.label = 12;
+                                    case 12:
+                                        if (!(matrix[point.x - 1] && matrix[point.x - 1][point.y - 1])) return [3 /*break*/, 14];
+                                        if (!(matrix[point.x - 1][point.y - 1] !== 4)) return [3 /*break*/, 14];
+                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y - 1))];
+                                    case 13:
+                                        object = _a.sent();
+                                        if (!isRepeated(new Point_1.default(point.x - 1, point.y - 1)) && !closed(object))
+                                            fCosts.push(object);
+                                        _a.label = 14;
+                                    case 14:
+                                        if (!(matrix[point.x + 1] && matrix[point.x + 1][point.y - 1])) return [3 /*break*/, 16];
+                                        if (!(matrix[point.x + 1][point.y - 1] !== 4)) return [3 /*break*/, 16];
+                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y - 1))];
+                                    case 15:
+                                        object = _a.sent();
+                                        if (!isRepeated(new Point_1.default(point.x + 1, point.y - 1)) && !closed(object))
+                                            fCosts.push(object);
+                                        _a.label = 16;
+                                    case 16:
+                                        fCosts.sort(function (a, b) {
+                                            var weightA = 0, weightB = 0;
+                                            if (b.props["fCost"] === a.props["fCost"]) {
+                                                // @TODO - On this first if, it doesn't matter if it's A or B. It's a draw. Add randomness later.
+                                                if (b.props["hCost"] === a.props["hCost"])
+                                                    weightA += 500;
+                                                else if (b.props["hCost"] < a.props["hCost"])
+                                                    weightB += 500;
+                                                else
+                                                    weightA += 500;
+                                            }
+                                            else if (b.props["fCost"] > a.props["fCost"])
+                                                weightA += 500;
+                                            else if (b.props["fCost"] < a.props["fCost"])
+                                                weightB += 500;
+                                            return weightB - weightA;
+                                        });
+                                        if (!fCosts[0].props.start && !fCosts[0].props.end && !fCosts[0].props.wall && !fCosts[0].props.closed) {
+                                            fCosts[0].color = "pink";
+                                            fCosts[0].addProperty("closed", true);
+                                        }
+                                        returnedGameObject = __assign({}, fCosts[0]);
+                                        fCosts.shift();
+                                        return [2 /*return*/, returnedGameObject];
+                                }
+                            });
+                        }); };
+                        _a.label = 1;
                     case 1:
+                        if (!!currentNode.props["end"]) return [3 /*break*/, 4];
+                        return [4 /*yield*/, Sleep_1.default.now(speed)];
+                    case 2:
                         _a.sent();
-                        currentNode = calculateCosts(currentNode.props["coords"]);
-                        return [3 /*break*/, 0];
-                    case 2: return [2 /*return*/];
+                        return [4 /*yield*/, calculateCosts(currentNode.props["coords"])];
+                    case 3:
+                        currentNode = _a.sent();
+                        return [3 /*break*/, 1];
+                    case 4: return [2 /*return*/];
                 }
             });
-        }); }, 500);
+        });
     };
     return bdv;
 }());
@@ -569,7 +612,7 @@ var Geometry = /** @class */ (function () {
     function Geometry() {
     }
     Geometry.distanceBetweenPoints = function (pointA, pointB) {
-        return Math.round(Math.sqrt(((pointB.x - pointA.x) * (pointB.x - pointA.x)) + ((pointB.y - pointA.y) * (pointB.y - pointA.y))));
+        return Math.sqrt(((pointB.x - pointA.x) * (pointB.x - pointA.x)) + ((pointB.y - pointA.y) * (pointB.y - pointA.y)));
     };
     return Geometry;
 }());
