@@ -10,6 +10,8 @@
     "module": "CommonJS",
     "baseUrl": "./",
     "typeRoots": [],
+    "lib": ["es5", "es2015", "dom", "scripthost"]
+
   },
   "types": [
     "reflect-metadata"

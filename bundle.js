@@ -4,7 +4,9 @@ let bdv = require("./dist/src/core/bdv").default;
 window.onload = function () {
     let test = new bdv("CANVAS_ID", 1024, 768);
     test.activateCanvasRendering();
-    test.gridFromMapFile();
+    // test.grid(10, 10);
+    test.aStar(100, 100);
+    // test.gridFromMapFile();
     // let mySeededMatrix = [];
     // for (let i = 0; i < 10; i++) mySeededMatrix[i] = [];
 
@@ -15,7 +17,7 @@ window.onload = function () {
     //     }
     // }
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-    test.conways(15, 15, null, "green", "lightgreen", 100);
+    // test.conways(100, 100, null, "red", "pink", 100);
 
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
@@ -92,6 +94,42 @@ var Model;
 // @TODO - Collidables.
 // @TODO - Expand pixel rendering, perlin noise and mandelbrots.
 // @TODO - Easy networking.
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -102,6 +140,8 @@ var Model_1 = require("./Model");
 var GameObject_1 = __importDefault(require("./GameObject"));
 var Dimension_1 = __importDefault(require("../math/Dimension"));
 var Point_1 = __importDefault(require("../math/Point"));
+var Geometry_1 = __importDefault(require("../math/Geometry"));
+var Sleep_1 = __importDefault(require("../utils/Sleep"));
 var map_json_1 = __importDefault(require("../../map.json"));
 var bdv = /** @class */ (function () {
     function bdv(canvasId, width, height) {
@@ -163,8 +203,8 @@ var bdv = /** @class */ (function () {
         };
         this.grid = function (rowsX, rowsY) {
             var matrix = [], tracker = [];
-            var tileSize = new Dimension_1.default(Math.floor(_this.dimensions.width / rowsX), Math.floor(_this.dimensions.height / rowsY));
-            for (var i = 0; i < rowsX; i++)
+            var tileSize = new Dimension_1.default(Math.round(_this.dimensions.width / rowsX), Math.round(_this.dimensions.height / rowsY));
+            for (var i = 0; i <= rowsX; i++)
                 matrix[i] = new Array(rowsY);
             for (var i = 0; i < matrix.length; i++) {
                 for (var j = 0; j < matrix[i].length; j++) {
@@ -174,7 +214,7 @@ var bdv = /** @class */ (function () {
             for (var i = 0; i < matrix.length; i++) {
                 for (var j = 0; j < matrix.length; j++) {
                     if (matrix[i][j] === 0) {
-                        var object = new GameObject_1.default(Model_1.Model.RECTANGLE_BORDER, new Point_1.default(i * tileSize.width, j * tileSize.height), new Dimension_1.default(tileSize.width, tileSize.height), "white");
+                        var object = new GameObject_1.default(Model_1.Model.RECTANGLE_BORDER, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "white");
                         _this.render.requestStage(object);
                         tracker.push(object);
                     }
@@ -200,7 +240,7 @@ var bdv = /** @class */ (function () {
         // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
         var _this = this;
         var matrix = initialSeed, bufferMatrix = [];
-        var tileSize = new Dimension_1.default(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
+        var tileSize = new Dimension_1.default(Math.round(this.dimensions.width / xRow), Math.round(this.dimensions.height / yRow));
         if (!initialSeed) {
             matrix = [];
             for (var i = 0; i < xRow; i++)
@@ -211,15 +251,15 @@ var bdv = /** @class */ (function () {
         for (var i = 0; i < matrix.length; i++) {
             for (var j = 0; j < matrix[i].length; j++) {
                 if (matrix[i][j] === 1 || Math.floor(Math.random() * 10) === 1) {
-                    matrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width, j * tileSize.height), new Dimension_1.default(tileSize.width, tileSize.height), aliveColor || "black");
+                    matrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), aliveColor || "black");
                     matrix[i][j].addProperty("alive", true);
-                    bufferMatrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width, j * tileSize.height), new Dimension_1.default(tileSize.width, tileSize.height), aliveColor || "black");
+                    bufferMatrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), aliveColor || "black");
                     bufferMatrix[i][j].addProperty("alive", true);
                 }
                 else {
-                    matrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width, j * tileSize.height), new Dimension_1.default(tileSize.width, tileSize.height), deadColor || "white");
+                    matrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), deadColor || "white");
                     matrix[i][j].addProperty("alive", false);
-                    bufferMatrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width, j * tileSize.height), new Dimension_1.default(tileSize.width, tileSize.height), deadColor || "white");
+                    bufferMatrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), deadColor || "white");
                     bufferMatrix[i][j].addProperty("alive", false);
                 }
                 this.render.requestStage(matrix[i][j]);
@@ -290,11 +330,152 @@ var bdv = /** @class */ (function () {
             }
         }, speed || 100);
     };
+    bdv.prototype.aStar = function (xRow, yRow, xStart, yStart, xEnd, yEnd, seed) {
+        // Gcost = distance from current node to the start node.
+        // Hcost = distance from current node to the end node.
+        // Fcost = Gcost + Hcost.
+        // Compute G, H and F for every surrounding start node (8 positions) and choose the one with the lowest Fcost.
+        var _this = this;
+        // Don't forget edge case when start === end
+        // Edge cases of truthyness of 0
+        if (xStart && yStart && xEnd && yEnd && xStart === xEnd && yStart === yEnd)
+            return null;
+        var matrix = [], tracker = [];
+        var start = xStart && yStart ? new Point_1.default(xStart, yStart) : new Point_1.default(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow) + 1);
+        var end = xEnd && yEnd ? new Point_1.default(xEnd, yEnd) : new Point_1.default(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow) + 1);
+        var tileSize = new Dimension_1.default(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
+        var currentNode, endNode;
+        for (var i = 0; i <= xRow; i++)
+            matrix[i] = new Array(yRow);
+        for (var i = 0; i < matrix.length; i++) {
+            for (var j = 0; j < matrix[i].length; j++) {
+                if (i === start.x && j === start.y)
+                    matrix[i][j] = 2;
+                else if (i === end.y && j === end.y)
+                    matrix[i][j] = 3;
+                else
+                    matrix[i][j] = 1;
+            }
+        }
+        for (var i = 0; i < matrix.length; i++) {
+            for (var j = 0; j < matrix[i].length; j++) {
+                var object = void 0;
+                if (matrix[i][j] === 1) {
+                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "white");
+                    object.addProperty("coords", new Point_1.default(i, j));
+                }
+                else if (matrix[i][j] === 2) {
+                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "blue");
+                    object.addProperty("start", true);
+                    object.addProperty("coords", new Point_1.default(i, j));
+                    currentNode = object;
+                }
+                else if (matrix[i][j] === 3) {
+                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "red");
+                    object.addProperty("end", true);
+                    object.addProperty("coords", new Point_1.default(i, j));
+                    endNode = object;
+                }
+                this.render.requestStage(object);
+                tracker.push(object);
+            }
+        }
+        var findGameObjectByCoordinate = function (point) {
+            var found = null;
+            for (var _i = 0, tracker_1 = tracker; _i < tracker_1.length; _i++) {
+                var obj = tracker_1[_i];
+                if (obj.props["coords"].x === point.x && obj.props["coords"].y === point.y) {
+                    found = obj;
+                    break;
+                }
+            }
+            return found;
+        };
+        var addCostsToGameObject = function (startPoint, endPoint, pointToTest) {
+            var d = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x + 1, pointToTest.y), startPoint);
+            var d2 = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x + 1, pointToTest.y), endPoint);
+            var f = d + d2;
+            var foundGameObject = findGameObjectByCoordinate(pointToTest);
+            if (foundGameObject) {
+                foundGameObject.addProperty("gCost", d);
+                foundGameObject.addProperty("hCost", d2);
+                foundGameObject.addProperty("fCost", f);
+                if (foundGameObject.color !== "grey" && foundGameObject.color !== "red" && foundGameObject.color !== "blue") {
+                    foundGameObject.color = "lightgreen";
+                }
+            }
+            return foundGameObject;
+        };
+        var calculateCosts = function (point) {
+            var startPoint = new Point_1.default(currentNode.props["coords"].x, currentNode.props["coords"].y);
+            var endPoint = new Point_1.default(endNode.props["coords"].x, endNode.props["coords"].y);
+            var fCosts = [];
+            if (matrix[point.x + 1] && matrix[point.x + 1][point.y]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y)));
+            }
+            if (matrix[point.x - 1] && matrix[point.x - 1][point.y]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y)));
+            }
+            if (matrix[point.x] && matrix[point.x][point.y + 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y + 1)));
+            }
+            if (matrix[point.x] && matrix[point.x][point.y - 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y - 1)));
+            }
+            if (matrix[point.x - 1] && matrix[point.x - 1][point.y + 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y + 1)));
+            }
+            if (matrix[point.x + 1] && matrix[point.x + 1][point.y + 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y + 1)));
+            }
+            if (matrix[point.x - 1] && matrix[point.x - 1][point.y - 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y - 1)));
+            }
+            if (matrix[point.x + 1] && matrix[point.x + 1][point.y - 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y - 1)));
+            }
+            fCosts.sort(function (a, b) { return b.props["fCost"] - a.props["fCost"]; });
+            if (fCosts[fCosts.length - 1].color !== "red" && fCosts[fCosts.length - 1].color !== "blue") {
+                fCosts[fCosts.length - 1].color = "grey";
+            }
+            return fCosts[fCosts.length - 1];
+        };
+        setInterval(function () { return __awaiter(_this, void 0, void 0, function () {
+            var i, j;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        i = 0;
+                        _a.label = 1;
+                    case 1:
+                        if (!(i < matrix.length)) return [3 /*break*/, 6];
+                        j = 0;
+                        _a.label = 2;
+                    case 2:
+                        if (!(j < matrix[i].length)) return [3 /*break*/, 5];
+                        // This will give me the new node with the lowest fCost.
+                        return [4 /*yield*/, Sleep_1.default.now(10)];
+                    case 3:
+                        // This will give me the new node with the lowest fCost.
+                        _a.sent();
+                        currentNode = calculateCosts(currentNode.props["coords"]);
+                        _a.label = 4;
+                    case 4:
+                        j++;
+                        return [3 /*break*/, 2];
+                    case 5:
+                        i++;
+                        return [3 /*break*/, 1];
+                    case 6: return [2 /*return*/];
+                }
+            });
+        }); }, 100);
+    };
     return bdv;
 }());
 exports.default = bdv;
 
-},{"../../map.json":2,"../math/Dimension":6,"../math/Point":7,"../render/CanvasRenderer":8,"../render/PixelRenderer":9,"./GameObject":3,"./Model":4}],6:[function(require,module,exports){
+},{"../../map.json":2,"../math/Dimension":6,"../math/Geometry":7,"../math/Point":8,"../render/CanvasRenderer":9,"../render/PixelRenderer":10,"../utils/Sleep":12,"./GameObject":3,"./Model":4}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Dimension = /** @class */ (function () {
@@ -309,6 +490,19 @@ exports.default = Dimension;
 },{}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var Geometry = /** @class */ (function () {
+    function Geometry() {
+    }
+    Geometry.distanceBetweenPoints = function (pointA, pointB) {
+        return Math.round(Math.sqrt(((pointB.x - pointA.x) * (pointB.x - pointA.x)) + ((pointB.y - pointA.y) * (pointB.y - pointA.y))));
+    };
+    return Geometry;
+}());
+exports.default = Geometry;
+
+},{}],8:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var Point = /** @class */ (function () {
     function Point(x, y) {
         this.x = x;
@@ -318,7 +512,7 @@ var Point = /** @class */ (function () {
 }());
 exports.default = Point;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -459,7 +653,7 @@ var bdvRender = /** @class */ (function () {
 }());
 exports.default = bdvRender;
 
-},{"../core/Model":4,"../math/Dimension":6,"../math/Point":7,"./Stage":10}],9:[function(require,module,exports){
+},{"../core/Model":4,"../math/Dimension":6,"../math/Point":8,"./Stage":11}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var ImageDataRender = /** @class */ (function () {
@@ -528,7 +722,7 @@ var ImageDataRender = /** @class */ (function () {
 }());
 exports.default = ImageDataRender;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Stage = /** @class */ (function () {
@@ -538,5 +732,22 @@ var Stage = /** @class */ (function () {
     return Stage;
 }());
 exports.default = Stage;
+
+},{}],12:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var Sleep = /** @class */ (function () {
+    function Sleep() {
+    }
+    Sleep.now = function (ms) {
+        return new Promise(function (resolve, reject) {
+            setTimeout(function () {
+                resolve();
+            }, ms);
+        });
+    };
+    return Sleep;
+}());
+exports.default = Sleep;
 
 },{}]},{},[1]);

@@ -18,5 +18,8 @@
   "homepage": "https://github.com/Brunodev09/bdv-engine#readme",
   "dependencies": {
     "browserify": "^16.5.0"
+  },
+  "devDependencies": {
+    "@types/core-js": "^0.9.36"
   }
 }
