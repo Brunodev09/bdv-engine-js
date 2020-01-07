@@ -14,6 +14,8 @@ import { Model } from "./Model";
 import GameObject from "./GameObject";
 import Dimension from "../math/Dimension";
 import Point from "../math/Point";
+import Geometry from "../math/Geometry";
+import Sleep from "../utils/Sleep";
 
 import mapFile from "../../map.json";
 
@@ -100,9 +102,9 @@ export default class bdv {
 
     grid = (rowsX: number, rowsY: number) => {
         let matrix = [], tracker = [];
-        const tileSize = new Dimension(Math.floor(this.dimensions.width / rowsX), Math.floor(this.dimensions.height / rowsY));
+        const tileSize = new Dimension(Math.round(this.dimensions.width / rowsX), Math.round(this.dimensions.height / rowsY));
 
-        for (let i = 0; i < rowsX; i++) matrix[i] = new Array(rowsY);
+        for (let i = 0; i <= rowsX; i++) matrix[i] = new Array(rowsY);
 
         for (let i = 0; i < matrix.length; i++) {
             for (let j = 0; j < matrix[i].length; j++) {
@@ -113,7 +115,7 @@ export default class bdv {
         for (let i = 0; i < matrix.length; i++) {
             for (let j = 0; j < matrix.length; j++) {
                 if (matrix[i][j] === 0) {
-                    let object = new GameObject(Model.RECTANGLE_BORDER, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "white");
+                    let object = new GameObject(Model.RECTANGLE_BORDER, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), "white");
                     this.render.requestStage(object);
                     tracker.push(object);
                 }
@@ -131,7 +133,7 @@ export default class bdv {
         // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
 
         let matrix = initialSeed, bufferMatrix = [];
-        const tileSize = new Dimension(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
+        const tileSize = new Dimension(Math.round(this.dimensions.width / xRow), Math.round(this.dimensions.height / yRow));
 
         if (!initialSeed) {
             matrix = [];
@@ -142,15 +144,15 @@ export default class bdv {
         for (let i = 0; i < matrix.length; i++) {
             for (let j = 0; j < matrix[i].length; j++) {
                 if (matrix[i][j] === 1 || Math.floor(Math.random() * 10) === 1) {
-                    matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), aliveColor || "black");
+                    matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), aliveColor || "black");
                     matrix[i][j].addProperty("alive", true);
-                    bufferMatrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), aliveColor || "black");
+                    bufferMatrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), aliveColor || "black");
                     bufferMatrix[i][j].addProperty("alive", true);
                 }
                 else {
-                    matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), deadColor || "white");
+                    matrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), deadColor || "white");
                     matrix[i][j].addProperty("alive", false);
-                    bufferMatrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), deadColor || "white");
+                    bufferMatrix[i][j] = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), deadColor || "white");
                     bufferMatrix[i][j].addProperty("alive", false);
                 }
                 this.render.requestStage(matrix[i][j]);
@@ -221,8 +223,151 @@ export default class bdv {
         }, speed || 100);
     }
 
+    aStar(xRow: number, yRow: number, xStart?: number, yStart?: number, xEnd?: number, yEnd?: number, seed?: number[][]) {
+        // Gcost = distance from current node to the start node.
+        // Hcost = distance from current node to the end node.
+        // Fcost = Gcost + Hcost.
+        // Compute G, H and F for every surrounding start node (8 positions) and choose the one with the lowest Fcost.
+
+
+        // Don't forget edge case when start === end
+        // Edge cases of truthyness of 0
+        if (xStart && yStart && xEnd && yEnd && xStart === xEnd && yStart === yEnd) return null;
+
+        let matrix = [], tracker = [];
+        let start = xStart && yStart ? new Point(xStart, yStart) : new Point(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow) + 1);
+        let end = xEnd && yEnd ? new Point(xEnd, yEnd) : new Point(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow) + 1);
+
+        const tileSize = new Dimension(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
+        
+        let currentNode, endNode;
+
+        for (let i = 0; i <= xRow; i++) matrix[i] = new Array(yRow);
+
+        for (let i = 0; i < matrix.length; i++) {
+            for (let j = 0; j < matrix[i].length; j++) {
+                if (i === start.x && j === start.y) matrix[i][j] = 2;
+                else if (i === end.y && j === end.y) matrix[i][j] = 3;
+                else matrix[i][j] = 1;
+            }
+        }
+
+        for (let i = 0; i < matrix.length; i++) {
+            for (let j = 0; j < matrix[i].length; j++) {
+                let object;
+                if (matrix[i][j] === 1) {
+                    object = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), "white");
+                    object.addProperty("coords", new Point(i, j));
+                }
+                else if (matrix[i][j] === 2) {
+                    object = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), "blue");
+                    object.addProperty("start", true);
+                    object.addProperty("coords", new Point(i, j));
+                    currentNode = object;
+                }
+                else if (matrix[i][j] === 3) {
+                    object = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), "red");
+                    object.addProperty("end", true);
+                    object.addProperty("coords", new Point(i, j));
+                    endNode = object;
+                }
+                this.render.requestStage(object);
+                tracker.push(object);
+            }
+        }
+
+        let findGameObjectByCoordinate = (point: Point) : GameObject | null => {
+            let found = null;
+            for (let obj of tracker) {
+                if (obj.props["coords"].x === point.x && obj.props["coords"].y === point.y) {
+                    found = obj;
+                    break;
+                }
+            }
+            return found;
+        }
+
+        let addCostsToGameObject = (startPoint: Point, endPoint: Point, pointToTest: Point): GameObject | null => {
+            let d = Geometry.distanceBetweenPoints(new Point(pointToTest.x + 1, pointToTest.y), startPoint);
+            let d2 = Geometry.distanceBetweenPoints(new Point(pointToTest.x + 1, pointToTest.y), endPoint);
+            let f = d + d2;
+            
+            let foundGameObject = findGameObjectByCoordinate(pointToTest);
+
+            if (foundGameObject) {
+                foundGameObject.addProperty("gCost", d); 
+                foundGameObject.addProperty("hCost", d2);
+                foundGameObject.addProperty("fCost", f);
+                if (foundGameObject.color !== "grey" && foundGameObject.color !== "red" && foundGameObject.color !== "blue") {
+                    foundGameObject.color = "lightgreen";
+                }
+            }
+            
+            return foundGameObject;
+        }
+
+        let calculateCosts = (point: Point) => {
+            
+            let startPoint = new Point(currentNode.props["coords"].x, currentNode.props["coords"].y);
+            let endPoint = new Point(endNode.props["coords"].x, endNode.props["coords"].y);
+            let fCosts = [];
+
+            if (matrix[point.x + 1] && matrix[point.x + 1][point.y]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y)));
+            }
+
+            if (matrix[point.x - 1] && matrix[point.x - 1][point.y]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y)));
+            }
+
+            if (matrix[point.x] && matrix[point.x][point.y + 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point(point.x, point.y + 1)));
+            }
+
+            if (matrix[point.x] && matrix[point.x][point.y - 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point(point.x, point.y - 1)));
+            }
+
+            if (matrix[point.x - 1] && matrix[point.x - 1][point.y + 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y + 1)));
+            }
+
+            if (matrix[point.x + 1] && matrix[point.x + 1][point.y + 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y + 1)));
+            }
+
+            if (matrix[point.x - 1] && matrix[point.x - 1][point.y - 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y - 1)));
+            }
+
+            if (matrix[point.x + 1] && matrix[point.x + 1][point.y - 1]) {
+                fCosts.push(addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y - 1)));
+            }
+
+            fCosts.sort((a, b) => b.props["fCost"]-a.props["fCost"]);
+            if (fCosts[fCosts.length - 1].color !== "red" && fCosts[fCosts.length - 1].color !== "blue") {
+                fCosts[fCosts.length - 1].color = "grey";
+            }
+
+            return fCosts[fCosts.length - 1];
+        };
+        
+        setInterval(async () => {
+            for (let i = 0; i < matrix.length; i++) {
+                for (let j = 0; j < matrix[i].length; j++) {
+                    // This will give me the new node with the lowest fCost.
+                    await Sleep.now(10);
+                    currentNode = calculateCosts(currentNode.props["coords"]);
+                }
+            }
+        }, 100);
+    }
+
     gridFromMapFile = () => {
         console.log(mapFile);
     }
+
+
 }
+
 
