@@ -4,7 +4,7 @@ window.onload = function () {
     let test = new bdv("CANVAS_ID", 1024, 768);
     test.activateCanvasRendering();
     // test.grid(10, 10);
-    test.aStar(100, 100);
+    test.aStar(25, 25);
     // test.gridFromMapFile();
     // let mySeededMatrix = [];
     // for (let i = 0; i < 10; i++) mySeededMatrix[i] = [];
