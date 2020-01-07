@@ -223,32 +223,29 @@ export default class bdv {
         }, speed || 100);
     }
 
-    aStar(xRow: number, yRow: number, xStart?: number, yStart?: number, xEnd?: number, yEnd?: number, seed?: number[][]) {
+    async aStar(xRow: number, yRow: number, xStart?: number, yStart?: number, xEnd?: number, yEnd?: number, speed?: number, seed?: number[][]) {
         // Gcost = distance from current node to the start node.
         // Hcost = distance from current node to the end node.
         // Fcost = Gcost + Hcost.
         // Compute G, H and F for every surrounding start node (8 positions) and choose the one with the lowest Fcost.
 
-
-        // Don't forget edge case when start === end
-        // Edge cases of truthyness of 0
+        // @TODO - Make sure that the final path is not ALL the closed nodes but the shortest path among the closed nodes.
         if (xStart && yStart && xEnd && yEnd && xStart === xEnd && yStart === yEnd) return null;
 
         let matrix = [], tracker = [];
-        let start = xStart && yStart ? new Point(xStart, yStart) : new Point(Math.floor(Math.random() * xRow) + 1, Math.floor(Math.random() * yRow) + 1);
-        let end = xEnd && yEnd ? new Point(xEnd, yEnd) : new Point(Math.floor(Math.random() * xRow) + 1, Math.floor(Math.random() * yRow) + 1);
-
+        let start = xStart !== null && yStart !== null ? new Point(xStart, yStart) : new Point(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow));
+        let end = xEnd !== null && yEnd !== null ? new Point(xEnd, yEnd) : new Point(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow));
         const tileSize = new Dimension(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
 
         let currentNode, endNode, startNode, fCosts = [];
 
-        for (let i = 0; i <= xRow; i++) matrix[i] = new Array(yRow);
+        for (let i = 0; i < xRow; i++) matrix[i] = new Array(yRow);
 
         for (let i = 0; i < matrix.length; i++) {
             for (let j = 0; j < matrix[i].length; j++) {
                 if (i === start.x && j === start.y) matrix[i][j] = 2;
                 else if (i === end.x && j === end.y) matrix[i][j] = 3;
-                else if (Math.floor(Math.random() * 10) === 1) matrix[i][j] = 4;
+                else if (Math.floor(Math.random() * 10) < 3) matrix[i][j] = 4;
                 else matrix[i][j] = 1;
             }
         }
@@ -294,13 +291,18 @@ export default class bdv {
             return found;
         }
 
-        let addCostsToGameObject = (startPoint: Point, endPoint: Point, pointToTest: Point): GameObject | null => {
-            let d = Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), startPoint);
+        let addCostsToGameObject = async (startPoint: Point, endPoint: Point, pointToTest: Point): Promise <GameObject> => {
+            // The trick here is that the Gcost is not SIMPLY the distance between the node being tested to the startNode.
+            // It's rather the distance of the distance from the currentNode to the node being tested + the distance of the 
+            // currentNode to the startNode. So Gcost = d(currentNode, thisNode) + d(currentNode, startNode).
+            let d = 
+            Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), new Point(currentNode.props.coords.x, currentNode.props.coords.y)) + 
+            Geometry.distanceBetweenPoints(new Point(currentNode.props.coords.x, currentNode.props.coords.y), startPoint);
             let d2 = Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), endPoint);
             let f = d + d2;
 
             let foundGameObject = findGameObjectByCoordinate(pointToTest);
-
+            // Since our Gcost is variable, I will never stop my code from re-adding the cost properties.
             if (foundGameObject) {
                 foundGameObject.addProperty("gCost", d);
                 foundGameObject.addProperty("hCost", d2);
@@ -309,11 +311,16 @@ export default class bdv {
                     foundGameObject.color = "lightgreen";
                 }
                 else if (foundGameObject.props.end) {
-                    foundGameObject.color = "lightblue";
                     startNode.color = "lightblue";
                     for (let obj of tracker) {
-                        if (obj.props["closed"]) obj.color = "lightblue";
+                        // @TODO - Order the closed nodes by their costs to actually make a consistently cute animation.
+                        if (obj.props["closed"]) {
+                            obj.color = "lightblue";
+                            await Sleep.now(Math.round(speed / 3));
+                        }
                     }
+                    foundGameObject.color = "lightblue";
+
                 }
             }
 
@@ -329,7 +336,11 @@ export default class bdv {
             return false;
         }
 
-        let calculateCosts = (point: Point) => {
+        let closed = (gameObject: GameObject): boolean => {
+            return !!gameObject.props.closed;
+        }
+
+        let calculateCosts = async (point: Point) => {
 
             let startPoint = new Point(startNode.props["coords"].x, startNode.props["coords"].y);
             let endPoint = new Point(endNode.props["coords"].x, endNode.props["coords"].y);
@@ -337,57 +348,57 @@ export default class bdv {
 
             if (matrix[point.x + 1] && matrix[point.x + 1][point.y]) {
                 if (matrix[point.x + 1][point.y] !== 4) {
-                    let object = addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y));
-                    if (!isRepeated(new Point(point.x + 1, point.y))) fCosts.push(object);
+                    let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y));
+                    if (!isRepeated(new Point(point.x + 1, point.y)) && !closed(object)) fCosts.push(object);
                 }
             }
 
             if (matrix[point.x - 1] && matrix[point.x - 1][point.y]) {
                 if (matrix[point.x - 1][point.y] !== 4) {
-                    let object = addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y));
-                    if (!isRepeated(new Point(point.x - 1, point.y))) fCosts.push(object);
+                    let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y));
+                    if (!isRepeated(new Point(point.x - 1, point.y)) && !closed(object)) fCosts.push(object);
                 }
             }
 
             if (matrix[point.x] && matrix[point.x][point.y + 1]) {
                 if (matrix[point.x][point.y + 1] !== 4) {
-                    let object = addCostsToGameObject(startPoint, endPoint, new Point(point.x, point.y + 1));
-                    if (!isRepeated(new Point(point.x, point.y + 1))) fCosts.push(object);
+                    let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x, point.y + 1));
+                    if (!isRepeated(new Point(point.x, point.y + 1)) && !closed(object)) fCosts.push(object);
                 }
             }
 
             if (matrix[point.x] && matrix[point.x][point.y - 1]) {
                 if (matrix[point.x][point.y - 1] !== 4) {
-                    let object = addCostsToGameObject(startPoint, endPoint, new Point(point.x, point.y - 1));
-                    if (!isRepeated(new Point(point.x, point.y - 1))) fCosts.push(object);
+                    let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x, point.y - 1));
+                    if (!isRepeated(new Point(point.x, point.y - 1)) && !closed(object)) fCosts.push(object);
                 }
             }
 
             if (matrix[point.x - 1] && matrix[point.x - 1][point.y + 1]) {
                 if (matrix[point.x - 1][point.y + 1] !== 4) {
-                    let object = addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y + 1))
-                    if (!isRepeated(new Point(point.x - 1, point.y + 1))) fCosts.push(object);
+                    let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y + 1))
+                    if (!isRepeated(new Point(point.x - 1, point.y + 1)) && !closed(object)) fCosts.push(object);
                 }
             }
 
             if (matrix[point.x + 1] && matrix[point.x + 1][point.y + 1]) {
                 if (matrix[point.x + 1][point.y + 1] !== 4) {
-                    let object = addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y + 1));
-                    if (!isRepeated(new Point(point.x + 1, point.y + 1))) fCosts.push(object);
+                    let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y + 1));
+                    if (!isRepeated(new Point(point.x + 1, point.y + 1)) && !closed(object)) fCosts.push(object);
                 }
             }
 
             if (matrix[point.x - 1] && matrix[point.x - 1][point.y - 1]) {
                 if (matrix[point.x - 1][point.y - 1] !== 4) {
-                    let object = addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y - 1));
-                    if (!isRepeated(new Point(point.x - 1, point.y - 1))) fCosts.push(object);
+                    let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y - 1));
+                    if (!isRepeated(new Point(point.x - 1, point.y - 1)) && !closed(object)) fCosts.push(object);
                 }
             }
 
             if (matrix[point.x + 1] && matrix[point.x + 1][point.y - 1]) {
                 if (matrix[point.x + 1][point.y - 1] !== 4) {
-                    let object = addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y - 1));
-                    if (!isRepeated(new Point(point.x + 1, point.y - 1))) fCosts.push(object);
+                    let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y - 1));
+                    if (!isRepeated(new Point(point.x + 1, point.y - 1)) && !closed(object)) fCosts.push(object);
                 }
             }
 
@@ -410,20 +421,15 @@ export default class bdv {
             }
 
             returnedGameObject = { ...fCosts[0] };
-            // @TODO - Bug is here. It slices the element just to push the same one again.
-            console.log("before",fCosts.length);
             fCosts.shift();
-            console.log("after",fCosts.length);
 
             return returnedGameObject;
         };
 
-        const interval = setInterval(async () => {
-            while (!currentNode.props["end"]) {
-                await Sleep.now(100);
-                currentNode = calculateCosts(currentNode.props["coords"]);
-            }
-        }, 500);
+        while (!currentNode.props["end"]) {
+            await Sleep.now(speed);
+            currentNode = await calculateCosts(currentNode.props["coords"]);
+        }
 
     }
 
