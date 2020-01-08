@@ -185,8 +185,8 @@ export default class Pathfinding implements Renderable {
         if (!foundGameObject.props.wall && !foundGameObject.props.start && !foundGameObject.props.end) {
             foundGameObject.color = "lightgreen";
         }
-
-        if (!foundGameObject.props.start) foundGameObject.addProperty("parent", this.currentNode);
+        // Only add currentNode as parent if it's not repeated. Will only update the repeated parent IF current Fcost < previous Fcost.
+        if (!foundGameObject.props.start && !foundGameObject.props.repeated) foundGameObject.addProperty("parent", this.currentNode);
 
         // Since our Gcost is variable, I will never stop my code from re-adding the cost properties.
         if (foundGameObject && !foundGameObject.props.start) {
@@ -194,6 +194,7 @@ export default class Pathfinding implements Renderable {
             if (foundGameObject.props["repeated"]) {
                 if (F >= foundGameObject.props["fCost"]) return foundGameObject;
             }
+            foundGameObject.addProperty("parent", this.currentNode);
             foundGameObject.addProperty("gCost", G);
             foundGameObject.addProperty("hCost", H);
             foundGameObject.addProperty("fCost", F);
@@ -281,7 +282,6 @@ export default class Pathfinding implements Renderable {
         }
 
         this.openList.sort(Pathfinding.A_STAR_COST_SORTING);
-        console.log(this.openList[0].props.fCost, this.openList[0].props.hCost)
         this.addToClosedList(this.openList[0]);
 
         returnedGameObject = this.openList[0];

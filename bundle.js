@@ -7,7 +7,7 @@ window.onload = function () {
     // test.grid(10, 10);
     // test.aStar(25, 25, 10, 12, 8, 12);
     // test.aStar(25, 25, 5, 5, 10, 5, 1000, null);
-    test.aStar(50, 50, null, null, null, null, 0, null);
+    // test.aStar(50, 50, null, null, null, null, 100, null);
 
     // test.gridFromMapFile();
     // let mySeededMatrix = [];
@@ -20,7 +20,7 @@ window.onload = function () {
     //     }
     // }
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-    // test.conways(100, 100, null, null, 100);
+    test.conways(100, 100, "green", "lightgreen", 100);
 
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
@@ -509,7 +509,8 @@ var Pathfinding = /** @class */ (function () {
             if (!foundGameObject.props.wall && !foundGameObject.props.start && !foundGameObject.props.end) {
                 foundGameObject.color = "lightgreen";
             }
-            if (!foundGameObject.props.start)
+            // Only add currentNode as parent if it's not repeated. Will only update the repeated parent IF current Fcost < previous Fcost.
+            if (!foundGameObject.props.start && !foundGameObject.props.repeated)
                 foundGameObject.addProperty("parent", _this.currentNode);
             // Since our Gcost is variable, I will never stop my code from re-adding the cost properties.
             if (foundGameObject && !foundGameObject.props.start) {
@@ -517,6 +518,7 @@ var Pathfinding = /** @class */ (function () {
                     if (F >= foundGameObject.props["fCost"])
                         return foundGameObject;
                 }
+                foundGameObject.addProperty("parent", _this.currentNode);
                 foundGameObject.addProperty("gCost", G);
                 foundGameObject.addProperty("hCost", H);
                 foundGameObject.addProperty("fCost", F);
