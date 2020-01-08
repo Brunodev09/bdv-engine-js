@@ -7,7 +7,7 @@ window.onload = function () {
     // test.grid(10, 10);
     // test.aStar(25, 25, 10, 12, 8, 12);
     // test.aStar(25, 25, 5, 5, 10, 5, 1000, null);
-    // test.aStar(50, 50, null, null, null, null, 100, null);
+    // test.aStar(50, 50, null, null, null, null, 50, null);
 
     // test.gridFromMapFile();
     // let mySeededMatrix = [];
@@ -20,12 +20,12 @@ window.onload = function () {
     //     }
     // }
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-    test.conways(100, 100, "green", "lightgreen", 100);
+    // test.conways(100, 100, "green", "lightgreen", 100);
 
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
 
-    // let movingSquare = test.movingSquares();
+    let movingSquare = test.movingSquares();
     // let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
     // let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
     // let myGrid = test.grid(50, 50);
@@ -242,10 +242,10 @@ var bdv = /** @class */ (function () {
     bdv.prototype.conways = function (xRow, yRow, aliveColor, deadColor, speed, seed) {
         return new Conways_1.default(this.render, this.dimensions, new Dimension_1.default(xRow, yRow), aliveColor, deadColor, speed, seed);
     };
-    bdv.prototype.aStar = function (xRow, yRow, xStart, yStart, xEnd, yEnd, speed, seed) {
+    bdv.prototype.aStar = function (xRow, yRow, xStart, yStart, xEnd, yEnd, speed, allowDiagonal, seed) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Pathfinding_1.default(this.dimensions, this.render, new Dimension_1.default(xRow, yRow), xStart, yStart, xEnd, yEnd, speed, seed)];
+                return [2 /*return*/, new Pathfinding_1.default(this.dimensions, this.render, new Dimension_1.default(xRow, yRow), xStart, yStart, xEnd, yEnd, speed, allowDiagonal, seed)];
             });
         });
     };
@@ -458,7 +458,7 @@ var Geometry_1 = __importDefault(require("./Geometry"));
 var Sleep_1 = __importDefault(require("../utils/Sleep"));
 var Model_1 = require("../core/Model");
 var Pathfinding = /** @class */ (function () {
-    function Pathfinding(screen, render, rows, xStart, yStart, xEnd, yEnd, speed, seed) {
+    function Pathfinding(screen, render, rows, xStart, yStart, xEnd, yEnd, speed, allowDiagonal, seed) {
         // Gcost = distance from current node to the start node.
         // Hcost = distance from current node to the end node.
         // Fcost = Gcost + Hcost.
@@ -553,28 +553,35 @@ var Pathfinding = /** @class */ (function () {
                         this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x, point.y - 1));
                     }
                 }
-                if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y + 1]) {
-                    if (this.notObstacle(new Point_1.default(point.x - 1, point.y + 1), 4)) {
-                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x - 1, point.y + 1));
+                if (this.allowDiagonal) {
+                    if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y + 1]) {
+                        if (this.notObstacle(new Point_1.default(point.x - 1, point.y + 1), 4)) {
+                            this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x - 1, point.y + 1));
+                        }
                     }
                 }
-                if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y + 1]) {
-                    if (this.notObstacle(new Point_1.default(point.x + 1, point.y + 1), 4)) {
-                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x + 1, point.y + 1));
+                if (this.allowDiagonal) {
+                    if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y + 1]) {
+                        if (this.notObstacle(new Point_1.default(point.x + 1, point.y + 1), 4)) {
+                            this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x + 1, point.y + 1));
+                        }
                     }
                 }
-                if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y - 1]) {
-                    if (this.notObstacle(new Point_1.default(point.x - 1, point.y - 1), 4)) {
-                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x - 1, point.y - 1));
+                if (this.allowDiagonal) {
+                    if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y - 1]) {
+                        if (this.notObstacle(new Point_1.default(point.x - 1, point.y - 1), 4)) {
+                            this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x - 1, point.y - 1));
+                        }
                     }
                 }
-                if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y - 1]) {
-                    if (this.notObstacle(new Point_1.default(point.x + 1, point.y - 1), 4)) {
-                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x + 1, point.y - 1));
+                if (this.allowDiagonal) {
+                    if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y - 1]) {
+                        if (this.notObstacle(new Point_1.default(point.x + 1, point.y - 1), 4)) {
+                            this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x + 1, point.y - 1));
+                        }
                     }
                 }
                 this.openList.sort(Pathfinding.A_STAR_COST_SORTING);
-                console.log(this.openList[0].props.fCost, this.openList[0].props.hCost);
                 this.addToClosedList(this.openList[0]);
                 returnedGameObject = this.openList[0];
                 this.openList.shift();
@@ -585,6 +592,7 @@ var Pathfinding = /** @class */ (function () {
         this.render = render;
         this.rows = rows;
         this.speed = speed;
+        this.allowDiagonal = allowDiagonal;
         this.closedList = [], this.openList = [], this.bestPath = [], this.tracker = [];
         if (xStart && yStart && xEnd && yEnd && xStart === xEnd && yStart === yEnd)
             return null;
