@@ -6,8 +6,7 @@ window.onload = function () {
     // test.grid(10, 10);
     // test.aStar(25, 25, 10, 12, 8, 12);
     // test.aStar(25, 25, 5, 5, 10, 5, 1000, null);
-    test.aStar(100, 100, null, null, null, null, 10, null);
-
+    test.aStar(50, 50, null, null, null, null, 0, null);
 
     // test.gridFromMapFile();
     // let mySeededMatrix = [];
@@ -20,7 +19,7 @@ window.onload = function () {
     //     }
     // }
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-    // test.conways(100, 100, null, "red", "pink", 100);
+    // test.conways(100, 100, null, null, 100);
 
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();

@@ -7,8 +7,7 @@ window.onload = function () {
     // test.grid(10, 10);
     // test.aStar(25, 25, 10, 12, 8, 12);
     // test.aStar(25, 25, 5, 5, 10, 5, 1000, null);
-    test.aStar(100, 100, null, null, null, null, 10, null);
-
+    test.aStar(50, 50, null, null, null, null, 0, null);
 
     // test.gridFromMapFile();
     // let mySeededMatrix = [];
@@ -21,7 +20,7 @@ window.onload = function () {
     //     }
     // }
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-    // test.conways(100, 100, null, "red", "pink", 100);
+    // test.conways(100, 100, null, null, 100);
 
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
@@ -147,9 +146,9 @@ var Model_1 = require("./Model");
 var GameObject_1 = __importDefault(require("./GameObject"));
 var Dimension_1 = __importDefault(require("../math/Dimension"));
 var Point_1 = __importDefault(require("../math/Point"));
-var Geometry_1 = __importDefault(require("../math/Geometry"));
-var Sleep_1 = __importDefault(require("../utils/Sleep"));
 var map_json_1 = __importDefault(require("../../map.json"));
+var Conways_1 = __importDefault(require("../math/Conways"));
+var Pathfinding_1 = __importDefault(require("../math/Pathfinding"));
 var bdv = /** @class */ (function () {
     function bdv(canvasId, width, height) {
         var _this = this;
@@ -240,39 +239,34 @@ var bdv = /** @class */ (function () {
     bdv.prototype.RGB = function () {
         return { r: Math.floor(Math.random() * 255), g: Math.floor(Math.random() * 255), b: Math.floor(Math.random() * 255) };
     };
-    bdv.prototype.conways = function (xRow, yRow, initialSeed, aliveColor, deadColor, speed) {
-        // Any live cell with fewer than two live neighbours dies, as if by underpopulation.
-        // Any live cell with two or three live neighbours lives on to the next generation.
-        // Any live cell with more than three live neighbours dies, as if by overpopulation.
-        // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-        var _this = this;
-        var matrix = initialSeed, bufferMatrix = [];
-        var tileSize = new Dimension_1.default(Math.round(this.dimensions.width / xRow), Math.round(this.dimensions.height / yRow));
-        if (!initialSeed) {
-            matrix = [];
-            for (var i = 0; i < xRow; i++)
-                matrix[i] = new Array(yRow);
-        }
-        for (var i = 0; i < xRow; i++)
-            bufferMatrix[i] = new Array(yRow);
-        for (var i = 0; i < matrix.length; i++) {
-            for (var j = 0; j < matrix[i].length; j++) {
-                if (matrix[i][j] === 1 || Math.floor(Math.random() * 10) === 1) {
-                    matrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), aliveColor || "black");
-                    matrix[i][j].addProperty("alive", true);
-                    bufferMatrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), aliveColor || "black");
-                    bufferMatrix[i][j].addProperty("alive", true);
-                }
-                else {
-                    matrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), deadColor || "white");
-                    matrix[i][j].addProperty("alive", false);
-                    bufferMatrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), deadColor || "white");
-                    bufferMatrix[i][j].addProperty("alive", false);
-                }
-                this.render.requestStage(matrix[i][j]);
-            }
-        }
-        var isAlive = function (position, world) {
+    bdv.prototype.conways = function (xRow, yRow, aliveColor, deadColor, speed, seed) {
+        return new Conways_1.default(this.render, this.dimensions, new Dimension_1.default(xRow, yRow), aliveColor, deadColor, speed, seed);
+    };
+    bdv.prototype.aStar = function (xRow, yRow, xStart, yStart, xEnd, yEnd, speed, seed) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Pathfinding_1.default(this.dimensions, this.render, new Dimension_1.default(xRow, yRow), xStart, yStart, xEnd, yEnd, speed, seed)];
+            });
+        });
+    };
+    return bdv;
+}());
+exports.default = bdv;
+
+},{"../../map.json":2,"../math/Conways":6,"../math/Dimension":7,"../math/Pathfinding":9,"../math/Point":10,"../render/CanvasRenderer":11,"../render/PixelRenderer":12,"./GameObject":3,"./Model":4}],6:[function(require,module,exports){
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var Dimension_1 = __importDefault(require("./Dimension"));
+var Point_1 = __importDefault(require("./Point"));
+var Geometry_1 = __importDefault(require("./Geometry"));
+var GameObject_1 = __importDefault(require("../core/GameObject"));
+var Model_1 = require("../core/Model");
+var Conways = /** @class */ (function () {
+    function Conways(render, screen, rows, aliveColor, deadColor, speed, seed) {
+        this.isAlive = function (position, world) {
             var neighboursCount = 0;
             var cellStatus = world[position.x][position.y].props["alive"];
             if (world[position.x + 1] && world[position.x + 1][position.y] &&
@@ -312,310 +306,79 @@ var bdv = /** @class */ (function () {
             else
                 return false;
         };
+        this.shouldRender = true;
+        this.render = render;
+        this.screen = screen;
+        this.rows = rows;
+        this.aliveColor = aliveColor;
+        this.deadColor = deadColor;
+        this.speed = speed;
+        if (!aliveColor)
+            this.aliveColor = "black";
+        if (!deadColor)
+            this.deadColor = "white";
+        this.tileSize = new Dimension_1.default(Math.round(this.screen.width / this.rows.width), Math.round(this.screen.height / this.rows.height));
+        this.matrix = seed;
+        if (!seed)
+            this.matrix = Geometry_1.default.createMatrix(this.rows);
+        this.bufferMatrix = Geometry_1.default.createMatrix(this.rows);
+        this.createAliveDeadGridOfGameObjects();
+        this.start();
+    }
+    Conways.prototype.createAliveDeadGridOfGameObjects = function () {
+        for (var i = 0; i < this.matrix.length; i++) {
+            for (var j = 0; j < this.matrix[i].length; j++) {
+                if (this.matrix[i][j] === 1 || Math.floor(Math.random() * 10) === 1) {
+                    this.matrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * this.tileSize.width + i, j * this.tileSize.height + j), new Dimension_1.default(this.tileSize.width, this.tileSize.height), this.aliveColor || "black");
+                    this.matrix[i][j].addProperty("alive", true);
+                    this.bufferMatrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * this.tileSize.width + i, j * this.tileSize.height + j), new Dimension_1.default(this.tileSize.width, this.tileSize.height), this.aliveColor || "black");
+                    this.bufferMatrix[i][j].addProperty("alive", true);
+                }
+                else {
+                    this.matrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * this.tileSize.width + i, j * this.tileSize.height + j), new Dimension_1.default(this.tileSize.width, this.tileSize.height), this.deadColor || "white");
+                    this.matrix[i][j].addProperty("alive", false);
+                    this.bufferMatrix[i][j] = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * this.tileSize.width + i, j * this.tileSize.height + j), new Dimension_1.default(this.tileSize.width, this.tileSize.height), this.deadColor || "white");
+                    this.bufferMatrix[i][j].addProperty("alive", false);
+                }
+                if (this.shouldRender)
+                    this.render.requestStage(this.matrix[i][j]);
+            }
+        }
+    };
+    Conways.prototype.start = function () {
+        var _this = this;
         setInterval(function () {
-            _this.render.clearStage();
-            for (var i = 0; i < matrix.length; i++) {
-                for (var j = 0; j < matrix.length; j++) {
-                    var alive = isAlive(new Point_1.default(i, j), matrix);
+            if (_this.shouldRender)
+                _this.render.clearStage();
+            for (var i = 0; i < _this.matrix.length; i++) {
+                for (var j = 0; j < _this.matrix.length; j++) {
+                    var alive = _this.isAlive(new Point_1.default(i, j), _this.matrix);
                     if (alive) {
-                        bufferMatrix[i][j].color = aliveColor || "black";
-                        bufferMatrix[i][j].props["alive"] = true;
+                        _this.bufferMatrix[i][j].color = _this.aliveColor || "black";
+                        _this.bufferMatrix[i][j].props["alive"] = true;
                     }
                     else {
-                        bufferMatrix[i][j].props["alive"] = false;
-                        bufferMatrix[i][j].color = deadColor || "white";
+                        _this.bufferMatrix[i][j].props["alive"] = false;
+                        _this.bufferMatrix[i][j].color = _this.deadColor || "white";
                     }
-                    _this.render.requestStage(matrix[i][j]);
+                    if (_this.shouldRender)
+                        _this.render.requestStage(_this.matrix[i][j]);
                 }
             }
             // Matching properties from bufferedMatrix and matrix without losing reference.
-            for (var i = 0; i < matrix.length; i++) {
-                for (var j = 0; j < matrix.length; j++) {
-                    matrix[i][j].color = bufferMatrix[i][j].color;
-                    matrix[i][j].props["alive"] = bufferMatrix[i][j].props["alive"];
+            for (var i = 0; i < _this.matrix.length; i++) {
+                for (var j = 0; j < _this.matrix.length; j++) {
+                    _this.matrix[i][j].color = _this.bufferMatrix[i][j].color;
+                    _this.matrix[i][j].props["alive"] = _this.bufferMatrix[i][j].props["alive"];
                 }
             }
-        }, speed || 100);
+        }, this.speed || 100);
     };
-    bdv.prototype.aStar = function (xRow, yRow, xStart, yStart, xEnd, yEnd, speed, seed) {
-        return __awaiter(this, void 0, void 0, function () {
-            var matrix, tracker, closedNodes, start, end, tileSize, currentNode, endNode, startNode, openList, bestPath, i, i, j, i, j, object, findGameObjectByCoordinate, lookForBestPathAfterEndNodeFound, addCostsToGameObject, isInOpenList, closed, calculateCosts;
-            var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        // Gcost = distance from current node to the start node.
-                        // Hcost = distance from current node to the end node.
-                        // Fcost = Gcost + Hcost.
-                        // Compute G, H and F for every surrounding start node (8 positions) and choose the one with the lowest Fcost.
-                        // @TODO - Make sure that the final path is not ALL the closed nodes but the shortest path among the closed nodes.
-                        if (xStart && yStart && xEnd && yEnd && xStart === xEnd && yStart === yEnd)
-                            return [2 /*return*/, null];
-                        matrix = [], tracker = [], closedNodes = [];
-                        start = xStart !== null && yStart !== null ? new Point_1.default(xStart, yStart) : new Point_1.default(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow));
-                        end = xEnd !== null && yEnd !== null ? new Point_1.default(xEnd, yEnd) : new Point_1.default(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow));
-                        tileSize = new Dimension_1.default(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
-                        openList = [], bestPath = [];
-                        for (i = 0; i < xRow; i++)
-                            matrix[i] = new Array(yRow);
-                        for (i = 0; i < matrix.length; i++) {
-                            for (j = 0; j < matrix[i].length; j++) {
-                                if (i === start.x && j === start.y)
-                                    matrix[i][j] = 2;
-                                else if (i === end.x && j === end.y)
-                                    matrix[i][j] = 3;
-                                else if (Math.floor(Math.random() * 10) < 3)
-                                    matrix[i][j] = 4;
-                                else
-                                    matrix[i][j] = 1;
-                            }
-                        }
-                        for (i = 0; i < matrix.length; i++) {
-                            for (j = 0; j < matrix[i].length; j++) {
-                                object = void 0;
-                                if (matrix[i][j] === 1) {
-                                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "white");
-                                    object.addProperty("coords", new Point_1.default(i, j));
-                                }
-                                else if (matrix[i][j] === 2) {
-                                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "blue");
-                                    object.addProperty("start", true);
-                                    object.addProperty("coords", new Point_1.default(i, j));
-                                    object.addProperty("gCost", 0);
-                                    startNode = object;
-                                    currentNode = object;
-                                }
-                                else if (matrix[i][j] === 3) {
-                                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "red");
-                                    object.addProperty("end", true);
-                                    object.addProperty("coords", new Point_1.default(i, j));
-                                    endNode = object;
-                                }
-                                else {
-                                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "black");
-                                    object.addProperty("wall", true);
-                                    object.addProperty("coords", new Point_1.default(i, j));
-                                }
-                                this.render.requestStage(object);
-                                tracker.push(object);
-                            }
-                        }
-                        findGameObjectByCoordinate = function (point) {
-                            var found = null;
-                            for (var _i = 0, tracker_1 = tracker; _i < tracker_1.length; _i++) {
-                                var obj = tracker_1[_i];
-                                if (obj.props["coords"].x === point.x && obj.props["coords"].y === point.y) {
-                                    found = obj;
-                                    break;
-                                }
-                            }
-                            return found;
-                        };
-                        lookForBestPathAfterEndNodeFound = function () {
-                            var next = currentNode;
-                            next.color = "lightblue";
-                            bestPath.push(next);
-                            while (next) {
-                                if (next && next.props && next.props.start)
-                                    break;
-                                next = next.props.parent;
-                                next.color = "lightblue";
-                                bestPath.push(next);
-                            }
-                            endNode.color = "lightblue";
-                            console.log(currentNode, bestPath);
-                        };
-                        addCostsToGameObject = function (startPoint, endPoint, pointToTest) { return __awaiter(_this, void 0, void 0, function () {
-                            var G, H, F, foundGameObject;
-                            return __generator(this, function (_a) {
-                                G = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x, pointToTest.y), new Point_1.default(currentNode.props.coords.x, currentNode.props.coords.y)) +
-                                    Geometry_1.default.distanceBetweenPoints(new Point_1.default(currentNode.props.coords.x, currentNode.props.coords.y), startPoint);
-                                H = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x, pointToTest.y), endPoint);
-                                F = G + H;
-                                foundGameObject = findGameObjectByCoordinate(pointToTest);
-                                if (foundGameObject.props.closed)
-                                    return [2 /*return*/, foundGameObject];
-                                if (!foundGameObject.props.wall && !foundGameObject.props.start && !foundGameObject.props.end) {
-                                    foundGameObject.color = "lightgreen";
-                                }
-                                if (!foundGameObject.props.start)
-                                    foundGameObject.addProperty("parent", currentNode);
-                                // Since our Gcost is variable, I will never stop my code from re-adding the cost properties.
-                                if (foundGameObject && !foundGameObject.props.start) {
-                                    if (foundGameObject.props["repeated"]) {
-                                        if (F < foundGameObject.props["fCost"]) {
-                                            foundGameObject.addProperty("gCost", G);
-                                            foundGameObject.addProperty("hCost", H);
-                                            foundGameObject.addProperty("fCost", F);
-                                            if (foundGameObject.props.parent) {
-                                                foundGameObject.props.parent.addProperty("gCost", G);
-                                                foundGameObject.props.parent.addProperty("hCost", H);
-                                                foundGameObject.props.parent.addProperty("fCost", F);
-                                            }
-                                        }
-                                    }
-                                    else {
-                                        foundGameObject.addProperty("gCost", G);
-                                        foundGameObject.addProperty("hCost", H);
-                                        foundGameObject.addProperty("fCost", F);
-                                    }
-                                    if (foundGameObject.props.end) {
-                                        lookForBestPathAfterEndNodeFound();
-                                    }
-                                }
-                                return [2 /*return*/, foundGameObject];
-                            });
-                        }); };
-                        isInOpenList = function (point) {
-                            for (var _i = 0, openList_1 = openList; _i < openList_1.length; _i++) {
-                                var obj = openList_1[_i];
-                                if (obj.props["coords"].x === point.x && obj.props["coords"].y === point.y) {
-                                    obj.addProperty("repeated", true);
-                                    return true;
-                                }
-                            }
-                            return false;
-                        };
-                        closed = function (gameObject) {
-                            return !!gameObject.props.closed;
-                        };
-                        calculateCosts = function (point) { return __awaiter(_this, void 0, void 0, function () {
-                            var startPoint, endPoint, returnedGameObject, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        startPoint = new Point_1.default(startNode.props["coords"].x, startNode.props["coords"].y);
-                                        endPoint = new Point_1.default(endNode.props["coords"].x, endNode.props["coords"].y);
-                                        if (!(matrix[point.x + 1] && matrix[point.x + 1][point.y])) return [3 /*break*/, 2];
-                                        if (!(matrix[point.x + 1][point.y] !== 4)) return [3 /*break*/, 2];
-                                        repeat = isInOpenList(new Point_1.default(point.x + 1, point.y));
-                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y))];
-                                    case 1:
-                                        object = _a.sent();
-                                        if (!repeat && !closed(object))
-                                            openList.push(object);
-                                        _a.label = 2;
-                                    case 2:
-                                        if (!(matrix[point.x - 1] && matrix[point.x - 1][point.y])) return [3 /*break*/, 4];
-                                        if (!(matrix[point.x - 1][point.y] !== 4)) return [3 /*break*/, 4];
-                                        repeat = isInOpenList(new Point_1.default(point.x - 1, point.y));
-                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y))];
-                                    case 3:
-                                        object = _a.sent();
-                                        if (!repeat && !closed(object))
-                                            openList.push(object);
-                                        _a.label = 4;
-                                    case 4:
-                                        if (!(matrix[point.x] && matrix[point.x][point.y + 1])) return [3 /*break*/, 6];
-                                        if (!(matrix[point.x][point.y + 1] !== 4)) return [3 /*break*/, 6];
-                                        repeat = isInOpenList(new Point_1.default(point.x, point.y + 1));
-                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y + 1))];
-                                    case 5:
-                                        object = _a.sent();
-                                        if (!repeat && !closed(object))
-                                            openList.push(object);
-                                        _a.label = 6;
-                                    case 6:
-                                        if (!(matrix[point.x] && matrix[point.x][point.y - 1])) return [3 /*break*/, 8];
-                                        if (!(matrix[point.x][point.y - 1] !== 4)) return [3 /*break*/, 8];
-                                        repeat = isInOpenList(new Point_1.default(point.x, point.y - 1));
-                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y - 1))];
-                                    case 7:
-                                        object = _a.sent();
-                                        if (!repeat && !closed(object))
-                                            openList.push(object);
-                                        _a.label = 8;
-                                    case 8:
-                                        if (!(matrix[point.x - 1] && matrix[point.x - 1][point.y + 1])) return [3 /*break*/, 10];
-                                        if (!(matrix[point.x - 1][point.y + 1] !== 4)) return [3 /*break*/, 10];
-                                        repeat = isInOpenList(new Point_1.default(point.x - 1, point.y + 1));
-                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y + 1))];
-                                    case 9:
-                                        object = _a.sent();
-                                        if (!repeat && !closed(object))
-                                            openList.push(object);
-                                        _a.label = 10;
-                                    case 10:
-                                        if (!(matrix[point.x + 1] && matrix[point.x + 1][point.y + 1])) return [3 /*break*/, 12];
-                                        if (!(matrix[point.x + 1][point.y + 1] !== 4)) return [3 /*break*/, 12];
-                                        repeat = isInOpenList(new Point_1.default(point.x + 1, point.y + 1));
-                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y + 1))];
-                                    case 11:
-                                        object = _a.sent();
-                                        if (!repeat && !closed(object))
-                                            openList.push(object);
-                                        _a.label = 12;
-                                    case 12:
-                                        if (!(matrix[point.x - 1] && matrix[point.x - 1][point.y - 1])) return [3 /*break*/, 14];
-                                        if (!(matrix[point.x - 1][point.y - 1] !== 4)) return [3 /*break*/, 14];
-                                        repeat = isInOpenList(new Point_1.default(point.x - 1, point.y - 1));
-                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y - 1))];
-                                    case 13:
-                                        object = _a.sent();
-                                        if (!repeat && !closed(object))
-                                            openList.push(object);
-                                        _a.label = 14;
-                                    case 14:
-                                        if (!(matrix[point.x + 1] && matrix[point.x + 1][point.y - 1])) return [3 /*break*/, 16];
-                                        if (!(matrix[point.x + 1][point.y - 1] !== 4)) return [3 /*break*/, 16];
-                                        repeat = isInOpenList(new Point_1.default(point.x + 1, point.y - 1));
-                                        return [4 /*yield*/, addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y - 1))];
-                                    case 15:
-                                        object = _a.sent();
-                                        if (!repeat && !closed(object))
-                                            openList.push(object);
-                                        _a.label = 16;
-                                    case 16:
-                                        openList.sort(function (a, b) {
-                                            var weightA = 0, weightB = 0;
-                                            if (b.props["fCost"] === a.props["fCost"]) {
-                                                // @TODO - On this first if, it doesn't matter if it's A or B. It's a draw. Add randomness later.
-                                                if (b.props["hCost"] === a.props["hCost"])
-                                                    weightA += 500;
-                                                else if (b.props["hCost"] < a.props["hCost"])
-                                                    weightB += 500;
-                                                else
-                                                    weightA += 500;
-                                            }
-                                            else if (b.props["fCost"] > a.props["fCost"])
-                                                weightA += 500;
-                                            else if (b.props["fCost"] < a.props["fCost"])
-                                                weightB += 500;
-                                            return weightB - weightA;
-                                        });
-                                        if (!openList[0].props.start && !openList[0].props.end && !openList[0].props.wall && !openList[0].props.closed) {
-                                            console.log(openList[0].props["fCost"]);
-                                            openList[0].color = "pink";
-                                            openList[0].addProperty("closed", true);
-                                            // openList[0].addProperty("parent", currentNode);
-                                            closedNodes.push(openList[0]);
-                                        }
-                                        returnedGameObject = openList[0];
-                                        openList.shift();
-                                        return [2 /*return*/, returnedGameObject];
-                                }
-                            });
-                        }); };
-                        _a.label = 1;
-                    case 1:
-                        if (!!currentNode.props["end"]) return [3 /*break*/, 4];
-                        return [4 /*yield*/, Sleep_1.default.now(speed)];
-                    case 2:
-                        _a.sent();
-                        return [4 /*yield*/, calculateCosts(currentNode.props["coords"])];
-                    case 3:
-                        currentNode = _a.sent();
-                        return [3 /*break*/, 1];
-                    case 4: return [2 /*return*/];
-                }
-            });
-        });
-    };
-    return bdv;
+    return Conways;
 }());
-exports.default = bdv;
+exports.default = Conways;
 
-},{"../../map.json":2,"../math/Dimension":6,"../math/Geometry":7,"../math/Point":8,"../render/CanvasRenderer":9,"../render/PixelRenderer":10,"../utils/Sleep":12,"./GameObject":3,"./Model":4}],6:[function(require,module,exports){
+},{"../core/GameObject":3,"../core/Model":4,"./Dimension":7,"./Geometry":8,"./Point":10}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Dimension = /** @class */ (function () {
@@ -627,7 +390,7 @@ var Dimension = /** @class */ (function () {
 }());
 exports.default = Dimension;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Geometry = /** @class */ (function () {
@@ -636,11 +399,351 @@ var Geometry = /** @class */ (function () {
     Geometry.distanceBetweenPoints = function (pointA, pointB) {
         return Math.sqrt(((pointB.x - pointA.x) * (pointB.x - pointA.x)) + ((pointB.y - pointA.y) * (pointB.y - pointA.y)));
     };
+    Geometry.createMatrix = function (dimensions) {
+        var m = [];
+        for (var i = 0; i < dimensions.width; i++)
+            m[i] = new Array(dimensions.height);
+        return m;
+    };
     return Geometry;
 }());
 exports.default = Geometry;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var GameObject_1 = __importDefault(require("../core/GameObject"));
+var Dimension_1 = __importDefault(require("./Dimension"));
+var Point_1 = __importDefault(require("./Point"));
+var Geometry_1 = __importDefault(require("./Geometry"));
+var Sleep_1 = __importDefault(require("../utils/Sleep"));
+var Model_1 = require("../core/Model");
+var Pathfinding = /** @class */ (function () {
+    function Pathfinding(screen, render, rows, xStart, yStart, xEnd, yEnd, speed, seed) {
+        // Gcost = distance from current node to the start node.
+        // Hcost = distance from current node to the end node.
+        // Fcost = Gcost + Hcost.
+        // Compute G, H and F for every surrounding start node (8 positions) and choose the one with the lowest Fcost.
+        var _this = this;
+        this.isInOpenList = function (point) {
+            for (var _i = 0, _a = _this.openList; _i < _a.length; _i++) {
+                var obj = _a[_i];
+                if (obj.props["coords"].x === point.x && obj.props["coords"].y === point.y) {
+                    obj.addProperty("repeated", true);
+                    return true;
+                }
+            }
+            return false;
+        };
+        this.closed = function (gameObject) {
+            return !!gameObject.props.closed;
+        };
+        this.findGameObjectByCoordinate = function (point) {
+            var found = null;
+            for (var _i = 0, _a = _this.tracker; _i < _a.length; _i++) {
+                var obj = _a[_i];
+                if (obj.props["coords"].x === point.x && obj.props["coords"].y === point.y) {
+                    found = obj;
+                    break;
+                }
+            }
+            return found;
+        };
+        this.lookForBestPathAfterEndNodeFound = function () {
+            var next = _this.currentNode;
+            next.color = "lightblue";
+            _this.bestPath.push(next);
+            while (next) {
+                if (next && next.props && next.props.start)
+                    break;
+                next = next.props.parent;
+                next.color = "lightblue";
+                _this.bestPath.push(next);
+            }
+            _this.endNode.color = "lightblue";
+        };
+        this.addCostsToGameObject = function (startPoint, endPoint, pointToTest) { return __awaiter(_this, void 0, void 0, function () {
+            var G, H, F, foundGameObject;
+            return __generator(this, function (_a) {
+                G = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x, pointToTest.y), new Point_1.default(this.currentNode.props.coords.x, this.currentNode.props.coords.y)) +
+                    Geometry_1.default.distanceBetweenPoints(new Point_1.default(this.currentNode.props.coords.x, this.currentNode.props.coords.y), startPoint);
+                H = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x, pointToTest.y), endPoint);
+                F = G + H;
+                foundGameObject = this.findGameObjectByCoordinate(pointToTest);
+                if (foundGameObject.props.closed)
+                    return [2 /*return*/, foundGameObject];
+                if (!foundGameObject.props.wall && !foundGameObject.props.start && !foundGameObject.props.end) {
+                    foundGameObject.color = "lightgreen";
+                }
+                if (!foundGameObject.props.start)
+                    foundGameObject.addProperty("parent", this.currentNode);
+                // Since our Gcost is variable, I will never stop my code from re-adding the cost properties.
+                if (foundGameObject && !foundGameObject.props.start) {
+                    if (foundGameObject.props["repeated"]) {
+                        if (F < foundGameObject.props["fCost"]) {
+                            foundGameObject.addProperty("gCost", G);
+                            foundGameObject.addProperty("hCost", H);
+                            foundGameObject.addProperty("fCost", F);
+                            if (foundGameObject.props.parent) {
+                                foundGameObject.props.parent.addProperty("gCost", G);
+                                foundGameObject.props.parent.addProperty("hCost", H);
+                                foundGameObject.props.parent.addProperty("fCost", F);
+                            }
+                        }
+                    }
+                    else {
+                        foundGameObject.addProperty("gCost", G);
+                        foundGameObject.addProperty("hCost", H);
+                        foundGameObject.addProperty("fCost", F);
+                    }
+                    if (foundGameObject.props.end) {
+                        this.lookForBestPathAfterEndNodeFound();
+                    }
+                }
+                return [2 /*return*/, foundGameObject];
+            });
+        }); };
+        this.calculateCosts = function (point) { return __awaiter(_this, void 0, void 0, function () {
+            var startPoint, endPoint, returnedGameObject, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        startPoint = new Point_1.default(this.startNode.props["coords"].x, this.startNode.props["coords"].y);
+                        endPoint = new Point_1.default(this.endNode.props["coords"].x, this.endNode.props["coords"].y);
+                        if (!(this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y])) return [3 /*break*/, 2];
+                        if (!(this.matrix[point.x + 1][point.y] !== 4)) return [3 /*break*/, 2];
+                        repeat = this.isInOpenList(new Point_1.default(point.x + 1, point.y));
+                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y))];
+                    case 1:
+                        object = _a.sent();
+                        if (!repeat && !this.closed(object))
+                            this.openList.push(object);
+                        _a.label = 2;
+                    case 2:
+                        if (!(this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y])) return [3 /*break*/, 4];
+                        if (!(this.matrix[point.x - 1][point.y] !== 4)) return [3 /*break*/, 4];
+                        repeat = this.isInOpenList(new Point_1.default(point.x - 1, point.y));
+                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y))];
+                    case 3:
+                        object = _a.sent();
+                        if (!repeat && !this.closed(object))
+                            this.openList.push(object);
+                        _a.label = 4;
+                    case 4:
+                        if (!(this.matrix[point.x] && this.matrix[point.x][point.y + 1])) return [3 /*break*/, 6];
+                        if (!(this.matrix[point.x][point.y + 1] !== 4)) return [3 /*break*/, 6];
+                        repeat = this.isInOpenList(new Point_1.default(point.x, point.y + 1));
+                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y + 1))];
+                    case 5:
+                        object = _a.sent();
+                        if (!repeat && !this.closed(object))
+                            this.openList.push(object);
+                        _a.label = 6;
+                    case 6:
+                        if (!(this.matrix[point.x] && this.matrix[point.x][point.y - 1])) return [3 /*break*/, 8];
+                        if (!(this.matrix[point.x][point.y - 1] !== 4)) return [3 /*break*/, 8];
+                        repeat = this.isInOpenList(new Point_1.default(point.x, point.y - 1));
+                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y - 1))];
+                    case 7:
+                        object = _a.sent();
+                        if (!repeat && !this.closed(object))
+                            this.openList.push(object);
+                        _a.label = 8;
+                    case 8:
+                        if (!(this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y + 1])) return [3 /*break*/, 10];
+                        if (!(this.matrix[point.x - 1][point.y + 1] !== 4)) return [3 /*break*/, 10];
+                        repeat = this.isInOpenList(new Point_1.default(point.x - 1, point.y + 1));
+                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y + 1))];
+                    case 9:
+                        object = _a.sent();
+                        if (!repeat && !this.closed(object))
+                            this.openList.push(object);
+                        _a.label = 10;
+                    case 10:
+                        if (!(this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y + 1])) return [3 /*break*/, 12];
+                        if (!(this.matrix[point.x + 1][point.y + 1] !== 4)) return [3 /*break*/, 12];
+                        repeat = this.isInOpenList(new Point_1.default(point.x + 1, point.y + 1));
+                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y + 1))];
+                    case 11:
+                        object = _a.sent();
+                        if (!repeat && !this.closed(object))
+                            this.openList.push(object);
+                        _a.label = 12;
+                    case 12:
+                        if (!(this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y - 1])) return [3 /*break*/, 14];
+                        if (!(this.matrix[point.x - 1][point.y - 1] !== 4)) return [3 /*break*/, 14];
+                        repeat = this.isInOpenList(new Point_1.default(point.x - 1, point.y - 1));
+                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y - 1))];
+                    case 13:
+                        object = _a.sent();
+                        if (!repeat && !this.closed(object))
+                            this.openList.push(object);
+                        _a.label = 14;
+                    case 14:
+                        if (!(this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y - 1])) return [3 /*break*/, 16];
+                        if (!(this.matrix[point.x + 1][point.y - 1] !== 4)) return [3 /*break*/, 16];
+                        repeat = this.isInOpenList(new Point_1.default(point.x + 1, point.y - 1));
+                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y - 1))];
+                    case 15:
+                        object = _a.sent();
+                        if (!repeat && !this.closed(object))
+                            this.openList.push(object);
+                        _a.label = 16;
+                    case 16:
+                        this.openList.sort(Pathfinding.A_STAR_COST_SORTING);
+                        if (!this.openList[0].props.start && !this.openList[0].props.end && !this.openList[0].props.wall && !this.openList[0].props.closed) {
+                            this.openList[0].color = "pink";
+                            this.openList[0].addProperty("closed", true);
+                            this.closedList.push(this.openList[0]);
+                        }
+                        returnedGameObject = this.openList[0];
+                        this.openList.shift();
+                        return [2 /*return*/, returnedGameObject];
+                }
+            });
+        }); };
+        this.screen = screen;
+        this.render = render;
+        this.rows = rows;
+        this.speed = speed;
+        this.closedList = [], this.openList = [], this.bestPath = [], this.tracker = [];
+        if (xStart && yStart && xEnd && yEnd && xStart === xEnd && yStart === yEnd)
+            return null;
+        this.matrix = [], this.tracker = [], this.closedList = [];
+        this.start = xStart !== null && yStart !== null ? new Point_1.default(xStart, yStart) : new Point_1.default(Math.floor(Math.random() * this.rows.width), Math.floor(Math.random() * this.rows.height));
+        this.end = xEnd !== null && yEnd !== null ? new Point_1.default(xEnd, yEnd) : new Point_1.default(Math.floor(Math.random() * this.rows.width), Math.floor(Math.random() * this.rows.height));
+        this.tileSize = new Dimension_1.default(Math.floor(this.screen.width / this.rows.width), Math.floor(this.screen.height / this.rows.height));
+        this.matrix = Geometry_1.default.createMatrix(new Dimension_1.default(this.rows.width, this.rows.height));
+        this.randomGeneration();
+        this.createGameObjectWithCosts();
+        this.run();
+    }
+    Pathfinding.A_STAR_COST_SORTING = function (a, b) {
+        var weightA = 0, weightB = 0;
+        if (b.props["fCost"] === a.props["fCost"]) {
+            // @TODO - On this first if, it doesn't matter if it's A or B. It's a draw. Add randomness later.
+            if (b.props["hCost"] === a.props["hCost"])
+                weightA += 500;
+            else if (b.props["hCost"] < a.props["hCost"])
+                weightB += 500;
+            else
+                weightA += 500;
+        }
+        else if (b.props["fCost"] > a.props["fCost"])
+            weightA += 500;
+        else if (b.props["fCost"] < a.props["fCost"])
+            weightB += 500;
+        return weightB - weightA;
+    };
+    Pathfinding.prototype.randomGeneration = function () {
+        for (var i = 0; i < this.matrix.length; i++) {
+            for (var j = 0; j < this.matrix[i].length; j++) {
+                if (i === this.start.x && j === this.start.y)
+                    this.matrix[i][j] = 2;
+                else if (i === this.end.x && j === this.end.y)
+                    this.matrix[i][j] = 3;
+                // else if (Math.floor(Math.random() * 10) < 3) this.matrix[i][j] = 4;
+                else
+                    this.matrix[i][j] = 1;
+            }
+        }
+    };
+    Pathfinding.prototype.createGameObjectWithCosts = function () {
+        for (var i = 0; i < this.matrix.length; i++) {
+            for (var j = 0; j < this.matrix[i].length; j++) {
+                var object = void 0;
+                if (this.matrix[i][j] === 1) {
+                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * this.tileSize.width + i, j * this.tileSize.height + j), new Dimension_1.default(this.tileSize.width, this.tileSize.height), "white");
+                    object.addProperty("coords", new Point_1.default(i, j));
+                }
+                else if (this.matrix[i][j] === 2) {
+                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * this.tileSize.width + i, j * this.tileSize.height + j), new Dimension_1.default(this.tileSize.width, this.tileSize.height), "blue");
+                    object.addProperty("start", true);
+                    object.addProperty("coords", new Point_1.default(i, j));
+                    object.addProperty("gCost", 0);
+                    this.startNode = object;
+                    this.currentNode = object;
+                }
+                else if (this.matrix[i][j] === 3) {
+                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * this.tileSize.width + i, j * this.tileSize.height + j), new Dimension_1.default(this.tileSize.width, this.tileSize.height), "red");
+                    object.addProperty("end", true);
+                    object.addProperty("coords", new Point_1.default(i, j));
+                    this.endNode = object;
+                }
+                else {
+                    object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * this.tileSize.width + i, j * this.tileSize.height + j), new Dimension_1.default(this.tileSize.width, this.tileSize.height), "black");
+                    object.addProperty("wall", true);
+                    object.addProperty("coords", new Point_1.default(i, j));
+                }
+                this.render.requestStage(object);
+                this.tracker.push(object);
+            }
+        }
+    };
+    Pathfinding.prototype.run = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (!!this.currentNode.props["end"]) return [3 /*break*/, 3];
+                        return [4 /*yield*/, Sleep_1.default.now(this.speed)];
+                    case 1:
+                        _b.sent();
+                        _a = this;
+                        return [4 /*yield*/, this.calculateCosts(this.currentNode.props["coords"])];
+                    case 2:
+                        _a.currentNode = _b.sent();
+                        return [3 /*break*/, 0];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    return Pathfinding;
+}());
+exports.default = Pathfinding;
+
+},{"../core/GameObject":3,"../core/Model":4,"../utils/Sleep":14,"./Dimension":7,"./Geometry":8,"./Point":10}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Point = /** @class */ (function () {
@@ -652,7 +755,7 @@ var Point = /** @class */ (function () {
 }());
 exports.default = Point;
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -793,7 +896,7 @@ var bdvRender = /** @class */ (function () {
 }());
 exports.default = bdvRender;
 
-},{"../core/Model":4,"../math/Dimension":6,"../math/Point":8,"./Stage":11}],10:[function(require,module,exports){
+},{"../core/Model":4,"../math/Dimension":7,"../math/Point":10,"./Stage":13}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var ImageDataRender = /** @class */ (function () {
@@ -862,7 +965,7 @@ var ImageDataRender = /** @class */ (function () {
 }());
 exports.default = ImageDataRender;
 
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Stage = /** @class */ (function () {
@@ -873,7 +976,7 @@ var Stage = /** @class */ (function () {
 }());
 exports.default = Stage;
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Sleep = /** @class */ (function () {
