@@ -32,7 +32,7 @@ I know there are tons of great frameworks out there, my actual purpose is the le
 
 ### Setup and Execution
 
-  There isn't a practical installation process yet. For now you can clone it, run "npm run start" and just like in my Main.js file, import the engine
+  There isn't a practical installation process yet. For now you can clone it, run `npm run start` and just like in my Main.js file, import the engine
   doing the following:
   
   ```
