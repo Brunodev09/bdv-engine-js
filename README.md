@@ -28,7 +28,7 @@ I know there are tons of great frameworks out there, my actual purpose is the le
 
 ### Clone
 
-- Clone this repository to your local machine using the following link `https://github.com/Brunodev09/fullstack-application`
+- Clone this repository to your local machine using the following link `https://github.com/Brunodev09/bdv-engine`
 
 ### Setup and Execution
 
@@ -71,8 +71,8 @@ npm run start
 ```
 
   Will compile the Typescript, Browserify the exports and automatically open a chrome service with the target HTML. (In this case test.html)
-  > You can remove the chrome service if you like, in the "package.json" file. Specifically in "start" property.
-  The running of the "npm run start" will give you an empty black screen.
+  > You can remove the chrome service if you like, in the `package.json` file. Specifically in `start` property.
+  The running of the `npm run start` will give you an empty black screen.
   
   From then you can either create your own GameObjects or load a renderable template.
   
