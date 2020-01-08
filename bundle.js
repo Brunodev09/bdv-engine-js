@@ -501,149 +501,82 @@ var Pathfinding = /** @class */ (function () {
             }
             _this.endNode.color = "lightblue";
         };
-        this.addCostsToGameObject = function (startPoint, endPoint, pointToTest) { return __awaiter(_this, void 0, void 0, function () {
-            var G, H, F, foundGameObject;
+        this.addCostsToGameObject = function (startPoint, endPoint, pointToTest) {
+            var _a = _this.calculateCosts(startPoint, endPoint, pointToTest, _this.currentNode), F = _a.F, G = _a.G, H = _a.H;
+            var foundGameObject = _this.findGameObjectByCoordinate(pointToTest);
+            if (foundGameObject.props.closed)
+                return foundGameObject;
+            if (!foundGameObject.props.wall && !foundGameObject.props.start && !foundGameObject.props.end) {
+                foundGameObject.color = "lightgreen";
+            }
+            if (!foundGameObject.props.start)
+                foundGameObject.addProperty("parent", _this.currentNode);
+            // Since our Gcost is variable, I will never stop my code from re-adding the cost properties.
+            if (foundGameObject && !foundGameObject.props.start) {
+                if (foundGameObject.props["repeated"]) {
+                    if (F >= foundGameObject.props["fCost"])
+                        return foundGameObject;
+                }
+                foundGameObject.addProperty("gCost", G);
+                foundGameObject.addProperty("hCost", H);
+                foundGameObject.addProperty("fCost", F);
+                if (foundGameObject.props.end) {
+                    _this.lookForBestPathAfterEndNodeFound();
+                }
+            }
+            return foundGameObject;
+        };
+        this.computeNextNodeChoice = function (point) { return __awaiter(_this, void 0, void 0, function () {
+            var startPoint, endPoint, returnedGameObject;
             return __generator(this, function (_a) {
-                G = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x, pointToTest.y), new Point_1.default(this.currentNode.props.coords.x, this.currentNode.props.coords.y)) +
-                    Geometry_1.default.distanceBetweenPoints(new Point_1.default(this.currentNode.props.coords.x, this.currentNode.props.coords.y), startPoint);
-                H = Geometry_1.default.distanceBetweenPoints(new Point_1.default(pointToTest.x, pointToTest.y), endPoint);
-                F = G + H;
-                foundGameObject = this.findGameObjectByCoordinate(pointToTest);
-                if (foundGameObject.props.closed)
-                    return [2 /*return*/, foundGameObject];
-                if (!foundGameObject.props.wall && !foundGameObject.props.start && !foundGameObject.props.end) {
-                    foundGameObject.color = "lightgreen";
-                }
-                if (!foundGameObject.props.start)
-                    foundGameObject.addProperty("parent", this.currentNode);
-                // Since our Gcost is variable, I will never stop my code from re-adding the cost properties.
-                if (foundGameObject && !foundGameObject.props.start) {
-                    if (foundGameObject.props["repeated"]) {
-                        if (F < foundGameObject.props["fCost"]) {
-                            foundGameObject.addProperty("gCost", G);
-                            foundGameObject.addProperty("hCost", H);
-                            foundGameObject.addProperty("fCost", F);
-                            if (foundGameObject.props.parent) {
-                                G =
-                                    Geometry_1.default.distanceBetweenPoints(new Point_1.default(foundGameObject.props.parent.props.coords.x, foundGameObject.props.parent.props.coords.y), new Point_1.default(foundGameObject.props.coords.x, foundGameObject.props.coords.y)) +
-                                        Geometry_1.default.distanceBetweenPoints(new Point_1.default(foundGameObject.props.coords.x, foundGameObject.props.coords.y), startPoint);
-                                H = Geometry_1.default.distanceBetweenPoints(new Point_1.default(foundGameObject.props.parent.props.coords.x, foundGameObject.props.parent.props.coords.y), endPoint);
-                                F = G + H;
-                                foundGameObject.props.parent.addProperty("gCost", G);
-                                foundGameObject.props.parent.addProperty("hCost", H);
-                                foundGameObject.props.parent.addProperty("fCost", F);
-                            }
-                        }
-                    }
-                    else {
-                        foundGameObject.addProperty("gCost", G);
-                        foundGameObject.addProperty("hCost", H);
-                        foundGameObject.addProperty("fCost", F);
-                    }
-                    if (foundGameObject.props.end) {
-                        this.lookForBestPathAfterEndNodeFound();
+                startPoint = new Point_1.default(this.startNode.props["coords"].x, this.startNode.props["coords"].y);
+                endPoint = new Point_1.default(this.endNode.props["coords"].x, this.endNode.props["coords"].y);
+                if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y]) {
+                    if (this.notObstacle(new Point_1.default(point.x + 1, point.y), 4)) {
+                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x + 1, point.y));
                     }
                 }
-                return [2 /*return*/, foundGameObject];
-            });
-        }); };
-        this.calculateCosts = function (point) { return __awaiter(_this, void 0, void 0, function () {
-            var startPoint, endPoint, returnedGameObject, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object, repeat, object;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        startPoint = new Point_1.default(this.startNode.props["coords"].x, this.startNode.props["coords"].y);
-                        endPoint = new Point_1.default(this.endNode.props["coords"].x, this.endNode.props["coords"].y);
-                        if (!(this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y])) return [3 /*break*/, 2];
-                        if (!(this.matrix[point.x + 1][point.y] !== 4)) return [3 /*break*/, 2];
-                        repeat = this.isInOpenList(new Point_1.default(point.x + 1, point.y));
-                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y))];
-                    case 1:
-                        object = _a.sent();
-                        if (!repeat && !this.closed(object))
-                            this.openList.push(object);
-                        _a.label = 2;
-                    case 2:
-                        if (!(this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y])) return [3 /*break*/, 4];
-                        if (!(this.matrix[point.x - 1][point.y] !== 4)) return [3 /*break*/, 4];
-                        repeat = this.isInOpenList(new Point_1.default(point.x - 1, point.y));
-                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y))];
-                    case 3:
-                        object = _a.sent();
-                        if (!repeat && !this.closed(object))
-                            this.openList.push(object);
-                        _a.label = 4;
-                    case 4:
-                        if (!(this.matrix[point.x] && this.matrix[point.x][point.y + 1])) return [3 /*break*/, 6];
-                        if (!(this.matrix[point.x][point.y + 1] !== 4)) return [3 /*break*/, 6];
-                        repeat = this.isInOpenList(new Point_1.default(point.x, point.y + 1));
-                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y + 1))];
-                    case 5:
-                        object = _a.sent();
-                        if (!repeat && !this.closed(object))
-                            this.openList.push(object);
-                        _a.label = 6;
-                    case 6:
-                        if (!(this.matrix[point.x] && this.matrix[point.x][point.y - 1])) return [3 /*break*/, 8];
-                        if (!(this.matrix[point.x][point.y - 1] !== 4)) return [3 /*break*/, 8];
-                        repeat = this.isInOpenList(new Point_1.default(point.x, point.y - 1));
-                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y - 1))];
-                    case 7:
-                        object = _a.sent();
-                        if (!repeat && !this.closed(object))
-                            this.openList.push(object);
-                        _a.label = 8;
-                    case 8:
-                        if (!(this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y + 1])) return [3 /*break*/, 10];
-                        if (!(this.matrix[point.x - 1][point.y + 1] !== 4)) return [3 /*break*/, 10];
-                        repeat = this.isInOpenList(new Point_1.default(point.x - 1, point.y + 1));
-                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y + 1))];
-                    case 9:
-                        object = _a.sent();
-                        if (!repeat && !this.closed(object))
-                            this.openList.push(object);
-                        _a.label = 10;
-                    case 10:
-                        if (!(this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y + 1])) return [3 /*break*/, 12];
-                        if (!(this.matrix[point.x + 1][point.y + 1] !== 4)) return [3 /*break*/, 12];
-                        repeat = this.isInOpenList(new Point_1.default(point.x + 1, point.y + 1));
-                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y + 1))];
-                    case 11:
-                        object = _a.sent();
-                        if (!repeat && !this.closed(object))
-                            this.openList.push(object);
-                        _a.label = 12;
-                    case 12:
-                        if (!(this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y - 1])) return [3 /*break*/, 14];
-                        if (!(this.matrix[point.x - 1][point.y - 1] !== 4)) return [3 /*break*/, 14];
-                        repeat = this.isInOpenList(new Point_1.default(point.x - 1, point.y - 1));
-                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x - 1, point.y - 1))];
-                    case 13:
-                        object = _a.sent();
-                        if (!repeat && !this.closed(object))
-                            this.openList.push(object);
-                        _a.label = 14;
-                    case 14:
-                        if (!(this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y - 1])) return [3 /*break*/, 16];
-                        if (!(this.matrix[point.x + 1][point.y - 1] !== 4)) return [3 /*break*/, 16];
-                        repeat = this.isInOpenList(new Point_1.default(point.x + 1, point.y - 1));
-                        return [4 /*yield*/, this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x + 1, point.y - 1))];
-                    case 15:
-                        object = _a.sent();
-                        if (!repeat && !this.closed(object))
-                            this.openList.push(object);
-                        _a.label = 16;
-                    case 16:
-                        this.openList.sort(Pathfinding.A_STAR_COST_SORTING);
-                        if (!this.openList[0].props.start && !this.openList[0].props.end && !this.openList[0].props.wall && !this.openList[0].props.closed) {
-                            this.openList[0].color = "pink";
-                            this.openList[0].addProperty("closed", true);
-                            this.closedList.push(this.openList[0]);
-                        }
-                        returnedGameObject = this.openList[0];
-                        this.openList.shift();
-                        return [2 /*return*/, returnedGameObject];
+                if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y]) {
+                    if (this.notObstacle(new Point_1.default(point.x - 1, point.y), 4)) {
+                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x - 1, point.y));
+                    }
                 }
+                if (this.matrix[point.x] && this.matrix[point.x][point.y + 1]) {
+                    if (this.notObstacle(new Point_1.default(point.x, point.y + 1), 4)) {
+                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x, point.y + 1));
+                    }
+                }
+                if (this.matrix[point.x] && this.matrix[point.x][point.y - 1]) {
+                    if (this.notObstacle(new Point_1.default(point.x, point.y - 1), 4)) {
+                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x, point.y - 1));
+                    }
+                }
+                if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y + 1]) {
+                    if (this.notObstacle(new Point_1.default(point.x - 1, point.y + 1), 4)) {
+                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x - 1, point.y + 1));
+                    }
+                }
+                if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y + 1]) {
+                    if (this.notObstacle(new Point_1.default(point.x + 1, point.y + 1), 4)) {
+                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x + 1, point.y + 1));
+                    }
+                }
+                if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y - 1]) {
+                    if (this.notObstacle(new Point_1.default(point.x - 1, point.y - 1), 4)) {
+                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x - 1, point.y - 1));
+                    }
+                }
+                if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y - 1]) {
+                    if (this.notObstacle(new Point_1.default(point.x + 1, point.y - 1), 4)) {
+                        this.addToOpenList(startPoint, endPoint, new Point_1.default(point.x + 1, point.y - 1));
+                    }
+                }
+                this.openList.sort(Pathfinding.A_STAR_COST_SORTING);
+                console.log(this.openList[0].props.fCost, this.openList[0].props.hCost);
+                this.addToClosedList(this.openList[0]);
+                returnedGameObject = this.openList[0];
+                this.openList.shift();
+                return [2 /*return*/, returnedGameObject];
             });
         }); };
         this.screen = screen;
@@ -725,6 +658,40 @@ var Pathfinding = /** @class */ (function () {
             }
         }
     };
+    Pathfinding.prototype.calculateCosts = function (startPoint, endPoint, point, parent) {
+        // The trick here is that the Gcost is not SIMPLY the distance between the node being tested to the startNode.
+        // It's rather the distance of the distance from the currentNode to the node being tested + the distance of the 
+        // currentNode to the startNode. So Gcost = d(currentNode, thisNode) + d(currentNode, startNode).
+        // Using distance between points will calculate correctly all the diagonals G and H costs.
+        var G = Geometry_1.default.distanceBetweenPoints(new Point_1.default(point.x, point.y), new Point_1.default(parent.props.coords.x, parent.props.coords.y)) +
+            Geometry_1.default.distanceBetweenPoints(new Point_1.default(parent.props.coords.x, parent.props.coords.y), startPoint);
+        var H = Geometry_1.default.distanceBetweenPoints(new Point_1.default(point.x, point.y), endPoint);
+        var F = G + H;
+        return { F: F, G: G, H: H };
+    };
+    Pathfinding.prototype.addToClosedList = function (object) {
+        if (!object.props.start && !object.props.end && !object.props.wall && !object.props.closed) {
+            object.color = "pink";
+            object.addProperty("closed", true);
+            this.closedList.push(object);
+        }
+    };
+    Pathfinding.prototype.addToOpenList = function (startPoint, endPoint, point) {
+        return __awaiter(this, void 0, void 0, function () {
+            var repeat, object;
+            return __generator(this, function (_a) {
+                repeat = this.isInOpenList(new Point_1.default(point.x, point.y));
+                object = this.addCostsToGameObject(startPoint, endPoint, new Point_1.default(point.x, point.y));
+                if (!repeat && !this.closed(object)) {
+                    this.openList.push(object);
+                }
+                return [2 /*return*/];
+            });
+        });
+    };
+    Pathfinding.prototype.notObstacle = function (point, obstacleNumberRepresentation) {
+        return this.matrix[point.x][point.y] !== obstacleNumberRepresentation;
+    };
     Pathfinding.prototype.run = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _a;
@@ -736,7 +703,7 @@ var Pathfinding = /** @class */ (function () {
                     case 1:
                         _b.sent();
                         _a = this;
-                        return [4 /*yield*/, this.calculateCosts(this.currentNode.props["coords"])];
+                        return [4 /*yield*/, this.computeNextNodeChoice(this.currentNode.props["coords"])];
                     case 2:
                         _a.currentNode = _b.sent();
                         return [3 /*break*/, 0];
