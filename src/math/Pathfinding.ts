@@ -12,17 +12,17 @@ export default class Pathfinding implements Renderable {
 
 
     static A_STAR_COST_SORTING(a: GameObject, b: GameObject) {
-            let weightA = 0, weightB = 0;
-            if (b.props["fCost"] === a.props["fCost"]) {
-                // @TODO - On this first if, it doesn't matter if it's A or B. It's a draw. Add randomness later.
-                if (b.props["hCost"] === a.props["hCost"]) weightA += 500;
-                else if (b.props["hCost"] < a.props["hCost"]) weightB += 500;
-                else weightA += 500;
-            }
-            else if (b.props["fCost"] > a.props["fCost"]) weightA += 500;
-            else if (b.props["fCost"] < a.props["fCost"]) weightB += 500;
+        let weightA = 0, weightB = 0;
+        if (b.props["fCost"] === a.props["fCost"]) {
+            // @TODO - On this first if, it doesn't matter if it's A or B. It's a draw. Add randomness later.
+            if (b.props["hCost"] === a.props["hCost"]) weightA += 500;
+            else if (b.props["hCost"] < a.props["hCost"]) weightB += 500;
+            else weightA += 500;
+        }
+        else if (b.props["fCost"] > a.props["fCost"]) weightA += 500;
+        else if (b.props["fCost"] < a.props["fCost"]) weightB += 500;
 
-            return weightB - weightA;
+        return weightB - weightA;
     }
 
     shouldRender: boolean;
@@ -168,8 +168,8 @@ export default class Pathfinding implements Renderable {
         let G =
             Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), new Point(this.currentNode.props.coords.x, this.currentNode.props.coords.y)) +
             Geometry.distanceBetweenPoints(new Point(this.currentNode.props.coords.x, this.currentNode.props.coords.y), startPoint);
-        const H = Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), endPoint);
-        const F = G + H;
+        let H = Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), endPoint);
+        let F = G + H;
 
         let foundGameObject = this.findGameObjectByCoordinate(pointToTest);
 
@@ -191,6 +191,11 @@ export default class Pathfinding implements Renderable {
                     foundGameObject.addProperty("fCost", F);
 
                     if (foundGameObject.props.parent) {
+                        G =
+                            Geometry.distanceBetweenPoints(new Point(foundGameObject.props.parent.props.coords.x, foundGameObject.props.parent.props.coords.y), new Point(foundGameObject.props.coords.x, foundGameObject.props.coords.y)) +
+                            Geometry.distanceBetweenPoints(new Point(foundGameObject.props.coords.x, foundGameObject.props.coords.y), startPoint);
+                        H = Geometry.distanceBetweenPoints(new Point(foundGameObject.props.parent.props.coords.x, foundGameObject.props.parent.props.coords.y), endPoint);
+                        F = G + H;
                         foundGameObject.props.parent.addProperty("gCost", G);
                         foundGameObject.props.parent.addProperty("hCost", H);
                         foundGameObject.props.parent.addProperty("fCost", F);

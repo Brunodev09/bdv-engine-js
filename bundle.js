@@ -524,6 +524,11 @@ var Pathfinding = /** @class */ (function () {
                             foundGameObject.addProperty("hCost", H);
                             foundGameObject.addProperty("fCost", F);
                             if (foundGameObject.props.parent) {
+                                G =
+                                    Geometry_1.default.distanceBetweenPoints(new Point_1.default(foundGameObject.props.parent.props.coords.x, foundGameObject.props.parent.props.coords.y), new Point_1.default(foundGameObject.props.coords.x, foundGameObject.props.coords.y)) +
+                                        Geometry_1.default.distanceBetweenPoints(new Point_1.default(foundGameObject.props.coords.x, foundGameObject.props.coords.y), startPoint);
+                                H = Geometry_1.default.distanceBetweenPoints(new Point_1.default(foundGameObject.props.parent.props.coords.x, foundGameObject.props.parent.props.coords.y), endPoint);
+                                F = G + H;
                                 foundGameObject.props.parent.addProperty("gCost", G);
                                 foundGameObject.props.parent.addProperty("hCost", H);
                                 foundGameObject.props.parent.addProperty("fCost", F);
@@ -653,7 +658,7 @@ var Pathfinding = /** @class */ (function () {
         this.end = xEnd !== null && yEnd !== null ? new Point_1.default(xEnd, yEnd) : new Point_1.default(Math.floor(Math.random() * this.rows.width), Math.floor(Math.random() * this.rows.height));
         this.tileSize = new Dimension_1.default(Math.floor(this.screen.width / this.rows.width), Math.floor(this.screen.height / this.rows.height));
         this.matrix = Geometry_1.default.createMatrix(new Dimension_1.default(this.rows.width, this.rows.height));
-        this.randomGeneration();
+        this.randomGeneration(1);
         this.createGameObjectWithCosts();
         this.run();
     }
@@ -674,14 +679,15 @@ var Pathfinding = /** @class */ (function () {
             weightB += 500;
         return weightB - weightA;
     };
-    Pathfinding.prototype.randomGeneration = function () {
+    Pathfinding.prototype.randomGeneration = function (obstacleLevel) {
         for (var i = 0; i < this.matrix.length; i++) {
             for (var j = 0; j < this.matrix[i].length; j++) {
                 if (i === this.start.x && j === this.start.y)
                     this.matrix[i][j] = 2;
                 else if (i === this.end.x && j === this.end.y)
                     this.matrix[i][j] = 3;
-                // else if (Math.floor(Math.random() * 10) < 3) this.matrix[i][j] = 4;
+                else if (Math.floor(Math.random() * 10) < 3)
+                    this.matrix[i][j] = 4;
                 else
                     this.matrix[i][j] = 1;
             }
