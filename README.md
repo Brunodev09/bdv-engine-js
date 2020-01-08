@@ -47,8 +47,7 @@ I know there are tons of great frameworks out there, my actual purpose is the le
 
   The whole concept of this tool is to abstract away the boring process of encapsulation needed on the Canvas API to actually create
   something reusable. That includes, animation loops, shapes constructions, positions and dimension managament and rendering.
-  So I use what I call a "GameObject" to manage positions, dimensions and rendering. 
-  This "GameObject" is directly connected to the animation loop and rendering class, so all we have to worry about is the logic of what we want to build.
+  So I use what I call a "GameObject" to do just that, so all we have to worry about is the logic of what we want to build.
   
   Practical example:
   
