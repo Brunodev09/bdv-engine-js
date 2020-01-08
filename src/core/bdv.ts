@@ -232,12 +232,12 @@ export default class bdv {
         // @TODO - Make sure that the final path is not ALL the closed nodes but the shortest path among the closed nodes.
         if (xStart && yStart && xEnd && yEnd && xStart === xEnd && yStart === yEnd) return null;
 
-        let matrix = [], tracker = [];
+        let matrix = [], tracker = [], closedNodes = [];
         let start = xStart !== null && yStart !== null ? new Point(xStart, yStart) : new Point(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow));
         let end = xEnd !== null && yEnd !== null ? new Point(xEnd, yEnd) : new Point(Math.floor(Math.random() * xRow), Math.floor(Math.random() * yRow));
         const tileSize = new Dimension(Math.floor(this.dimensions.width / xRow), Math.floor(this.dimensions.height / yRow));
 
-        let currentNode, endNode, startNode, fCosts = [];
+        let currentNode, endNode, startNode, openList = [], bestPath = [];
 
         for (let i = 0; i < xRow; i++) matrix[i] = new Array(yRow);
 
@@ -261,6 +261,7 @@ export default class bdv {
                     object = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), "blue");
                     object.addProperty("start", true);
                     object.addProperty("coords", new Point(i, j));
+                    object.addProperty("gCost", 0);
                     startNode = object;
                     currentNode = object;
                 }
@@ -291,45 +292,75 @@ export default class bdv {
             return found;
         }
 
-        let addCostsToGameObject = async (startPoint: Point, endPoint: Point, pointToTest: Point): Promise <GameObject> => {
+        let lookForBestPathAfterEndNodeFound = () => {
+            let next = currentNode;
+            next.color = "lightblue";
+            bestPath.push(next);
+            while (next) {
+                if (next && next.props && next.props.start) break;
+                next = next.props.parent;
+                next.color = "lightblue";
+                bestPath.push(next);
+            }
+            endNode.color = "lightblue";
+            console.log(currentNode, bestPath);
+        }
+
+        let addCostsToGameObject = async (startPoint: Point, endPoint: Point, pointToTest: Point): Promise<GameObject> => {
             // The trick here is that the Gcost is not SIMPLY the distance between the node being tested to the startNode.
             // It's rather the distance of the distance from the currentNode to the node being tested + the distance of the 
             // currentNode to the startNode. So Gcost = d(currentNode, thisNode) + d(currentNode, startNode).
-            let d = 
-            Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), new Point(currentNode.props.coords.x, currentNode.props.coords.y)) + 
-            Geometry.distanceBetweenPoints(new Point(currentNode.props.coords.x, currentNode.props.coords.y), startPoint);
-            let d2 = Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), endPoint);
-            let f = d + d2;
+            // Using distance between points will calculate correctly all the diagonals G and H costs.
+            let G =
+                Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), new Point(currentNode.props.coords.x, currentNode.props.coords.y)) +
+                Geometry.distanceBetweenPoints(new Point(currentNode.props.coords.x, currentNode.props.coords.y), startPoint);
+            const H = Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), endPoint);
+            const F = G + H;
 
             let foundGameObject = findGameObjectByCoordinate(pointToTest);
+
+            if (foundGameObject.props.closed) return foundGameObject;
+
+            if (!foundGameObject.props.wall && !foundGameObject.props.start && !foundGameObject.props.end) {
+                foundGameObject.color = "lightgreen";
+            }
+
+            if (!foundGameObject.props.start) foundGameObject.addProperty("parent", currentNode);
+
             // Since our Gcost is variable, I will never stop my code from re-adding the cost properties.
-            if (foundGameObject) {
-                foundGameObject.addProperty("gCost", d);
-                foundGameObject.addProperty("hCost", d2);
-                foundGameObject.addProperty("fCost", f);
-                if (!foundGameObject.props.wall && !foundGameObject.props.closed && !foundGameObject.props.start && !foundGameObject.props.end) {
-                    foundGameObject.color = "lightgreen";
-                }
-                else if (foundGameObject.props.end) {
-                    startNode.color = "lightblue";
-                    for (let obj of tracker) {
-                        // @TODO - Order the closed nodes by their costs to actually make a consistently cute animation.
-                        if (obj.props["closed"]) {
-                            obj.color = "lightblue";
-                            await Sleep.now(Math.round(speed / 3));
+            if (foundGameObject && !foundGameObject.props.start) {
+
+                if (foundGameObject.props["repeated"]) {
+                    if (F < foundGameObject.props["fCost"]) {
+                        foundGameObject.addProperty("gCost", G);
+                        foundGameObject.addProperty("hCost", H);
+                        foundGameObject.addProperty("fCost", F);
+
+                        if (foundGameObject.props.parent) {
+                            foundGameObject.props.parent.addProperty("gCost", G);
+                            foundGameObject.props.parent.addProperty("hCost", H);
+                            foundGameObject.props.parent.addProperty("fCost", F);
                         }
                     }
-                    foundGameObject.color = "lightblue";
+                } else {
+                    foundGameObject.addProperty("gCost", G);
+                    foundGameObject.addProperty("hCost", H);
+                    foundGameObject.addProperty("fCost", F);
+                }
 
+
+                if (foundGameObject.props.end) {
+                    lookForBestPathAfterEndNodeFound();
                 }
             }
 
             return foundGameObject;
         }
 
-        let isRepeated = (point: Point): boolean => {
-            for (let obj of fCosts) {
+        let isInOpenList = (point: Point): boolean => {
+            for (let obj of openList) {
                 if (obj.props["coords"].x === point.x && obj.props["coords"].y === point.y) {
+                    obj.addProperty("repeated", true);
                     return true;
                 }
             }
@@ -348,61 +379,69 @@ export default class bdv {
 
             if (matrix[point.x + 1] && matrix[point.x + 1][point.y]) {
                 if (matrix[point.x + 1][point.y] !== 4) {
+                    const repeat = isInOpenList(new Point(point.x + 1, point.y));
                     let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y));
-                    if (!isRepeated(new Point(point.x + 1, point.y)) && !closed(object)) fCosts.push(object);
+                    if (!repeat && !closed(object)) openList.push(object);
                 }
             }
 
             if (matrix[point.x - 1] && matrix[point.x - 1][point.y]) {
                 if (matrix[point.x - 1][point.y] !== 4) {
+                    const repeat = isInOpenList(new Point(point.x - 1, point.y));
                     let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y));
-                    if (!isRepeated(new Point(point.x - 1, point.y)) && !closed(object)) fCosts.push(object);
+                    if (!repeat && !closed(object)) openList.push(object);
                 }
             }
 
             if (matrix[point.x] && matrix[point.x][point.y + 1]) {
                 if (matrix[point.x][point.y + 1] !== 4) {
+                    const repeat = isInOpenList(new Point(point.x, point.y + 1));
                     let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x, point.y + 1));
-                    if (!isRepeated(new Point(point.x, point.y + 1)) && !closed(object)) fCosts.push(object);
+                    if (!repeat && !closed(object)) openList.push(object);
                 }
             }
 
             if (matrix[point.x] && matrix[point.x][point.y - 1]) {
                 if (matrix[point.x][point.y - 1] !== 4) {
+                    const repeat = isInOpenList(new Point(point.x, point.y - 1));
                     let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x, point.y - 1));
-                    if (!isRepeated(new Point(point.x, point.y - 1)) && !closed(object)) fCosts.push(object);
+                    if (!repeat && !closed(object)) openList.push(object);
                 }
             }
 
             if (matrix[point.x - 1] && matrix[point.x - 1][point.y + 1]) {
                 if (matrix[point.x - 1][point.y + 1] !== 4) {
+                    const repeat = isInOpenList(new Point(point.x - 1, point.y + 1));
                     let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y + 1))
-                    if (!isRepeated(new Point(point.x - 1, point.y + 1)) && !closed(object)) fCosts.push(object);
+                    if (!repeat && !closed(object)) openList.push(object);
                 }
             }
 
             if (matrix[point.x + 1] && matrix[point.x + 1][point.y + 1]) {
                 if (matrix[point.x + 1][point.y + 1] !== 4) {
+                    const repeat = isInOpenList(new Point(point.x + 1, point.y + 1));
                     let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y + 1));
-                    if (!isRepeated(new Point(point.x + 1, point.y + 1)) && !closed(object)) fCosts.push(object);
+                    if (!repeat && !closed(object)) openList.push(object);
                 }
             }
 
             if (matrix[point.x - 1] && matrix[point.x - 1][point.y - 1]) {
                 if (matrix[point.x - 1][point.y - 1] !== 4) {
+                    const repeat = isInOpenList(new Point(point.x - 1, point.y - 1));
                     let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y - 1));
-                    if (!isRepeated(new Point(point.x - 1, point.y - 1)) && !closed(object)) fCosts.push(object);
+                    if (!repeat && !closed(object)) openList.push(object);
                 }
             }
 
             if (matrix[point.x + 1] && matrix[point.x + 1][point.y - 1]) {
                 if (matrix[point.x + 1][point.y - 1] !== 4) {
+                    const repeat = isInOpenList(new Point(point.x + 1, point.y - 1));
                     let object = await addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y - 1));
-                    if (!isRepeated(new Point(point.x + 1, point.y - 1)) && !closed(object)) fCosts.push(object);
+                    if (!repeat && !closed(object)) openList.push(object);
                 }
             }
 
-            fCosts.sort((a, b) => {
+            openList.sort((a, b) => {
                 let weightA = 0, weightB = 0;
                 if (b.props["fCost"] === a.props["fCost"]) {
                     // @TODO - On this first if, it doesn't matter if it's A or B. It's a draw. Add randomness later.
@@ -415,13 +454,16 @@ export default class bdv {
 
                 return weightB - weightA;
             });
-            if (!fCosts[0].props.start && !fCosts[0].props.end && !fCosts[0].props.wall && !fCosts[0].props.closed) {
-                fCosts[0].color = "pink";
-                fCosts[0].addProperty("closed", true);
+            if (!openList[0].props.start && !openList[0].props.end && !openList[0].props.wall && !openList[0].props.closed) {
+                console.log(openList[0].props["fCost"])
+                openList[0].color = "pink";
+                openList[0].addProperty("closed", true);
+                // openList[0].addProperty("parent", currentNode);
+                closedNodes.push(openList[0]);
             }
 
-            returnedGameObject = { ...fCosts[0] };
-            fCosts.shift();
+            returnedGameObject = openList[0];
+            openList.shift();
 
             return returnedGameObject;
         };

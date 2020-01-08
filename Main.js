@@ -5,7 +5,9 @@ window.onload = function () {
     test.activateCanvasRendering();
     // test.grid(10, 10);
     // test.aStar(25, 25, 10, 12, 8, 12);
-    test.aStar(25, 25, null, null, null, null, 100, null);
+    // test.aStar(25, 25, 5, 5, 10, 5, 1000, null);
+    test.aStar(100, 100, null, null, null, null, 10, null);
+
 
     // test.gridFromMapFile();
     // let mySeededMatrix = [];
