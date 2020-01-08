@@ -160,16 +160,23 @@ export default class Pathfinding implements Renderable {
         this.endNode.color = "lightblue";
     }
 
-    addCostsToGameObject = async (startPoint: Point, endPoint: Point, pointToTest: Point): Promise<GameObject> => {
+    calculateCosts(startPoint: Point, endPoint: Point, point: Point, parent: GameObject): { F: number, G: number, H: number } {
         // The trick here is that the Gcost is not SIMPLY the distance between the node being tested to the startNode.
         // It's rather the distance of the distance from the currentNode to the node being tested + the distance of the 
         // currentNode to the startNode. So Gcost = d(currentNode, thisNode) + d(currentNode, startNode).
         // Using distance between points will calculate correctly all the diagonals G and H costs.
         let G =
-            Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), new Point(this.currentNode.props.coords.x, this.currentNode.props.coords.y)) +
-            Geometry.distanceBetweenPoints(new Point(this.currentNode.props.coords.x, this.currentNode.props.coords.y), startPoint);
-        let H = Geometry.distanceBetweenPoints(new Point(pointToTest.x, pointToTest.y), endPoint);
+            Geometry.distanceBetweenPoints(new Point(point.x, point.y), new Point(parent.props.coords.x, parent.props.coords.y)) +
+            Geometry.distanceBetweenPoints(new Point(parent.props.coords.x, parent.props.coords.y), startPoint);
+
+        let H = Geometry.distanceBetweenPoints(new Point(point.x, point.y), endPoint);
         let F = G + H;
+
+        return { F, G, H };
+    }
+
+    addCostsToGameObject = (startPoint: Point, endPoint: Point, pointToTest: Point): GameObject => {
+        let { F, G, H } = this.calculateCosts(startPoint, endPoint, pointToTest, this.currentNode);
 
         let foundGameObject = this.findGameObjectByCoordinate(pointToTest);
 
@@ -185,28 +192,11 @@ export default class Pathfinding implements Renderable {
         if (foundGameObject && !foundGameObject.props.start) {
 
             if (foundGameObject.props["repeated"]) {
-                if (F < foundGameObject.props["fCost"]) {
-                    foundGameObject.addProperty("gCost", G);
-                    foundGameObject.addProperty("hCost", H);
-                    foundGameObject.addProperty("fCost", F);
-
-                    if (foundGameObject.props.parent) {
-                        G =
-                            Geometry.distanceBetweenPoints(new Point(foundGameObject.props.parent.props.coords.x, foundGameObject.props.parent.props.coords.y), new Point(foundGameObject.props.coords.x, foundGameObject.props.coords.y)) +
-                            Geometry.distanceBetweenPoints(new Point(foundGameObject.props.coords.x, foundGameObject.props.coords.y), startPoint);
-                        H = Geometry.distanceBetweenPoints(new Point(foundGameObject.props.parent.props.coords.x, foundGameObject.props.parent.props.coords.y), endPoint);
-                        F = G + H;
-                        foundGameObject.props.parent.addProperty("gCost", G);
-                        foundGameObject.props.parent.addProperty("hCost", H);
-                        foundGameObject.props.parent.addProperty("fCost", F);
-                    }
-                }
-            } else {
-                foundGameObject.addProperty("gCost", G);
-                foundGameObject.addProperty("hCost", H);
-                foundGameObject.addProperty("fCost", F);
+                if (F >= foundGameObject.props["fCost"]) return foundGameObject;
             }
-
+            foundGameObject.addProperty("gCost", G);
+            foundGameObject.addProperty("hCost", H);
+            foundGameObject.addProperty("fCost", F);
 
             if (foundGameObject.props.end) {
                 this.lookForBestPathAfterEndNodeFound();
@@ -216,83 +206,83 @@ export default class Pathfinding implements Renderable {
         return foundGameObject;
     }
 
-    calculateCosts = async (point: Point) => {
+    addToClosedList(object: GameObject) {
+        if (!object.props.start && !object.props.end && !object.props.wall && !object.props.closed) {
+            object.color = "pink";
+            object.addProperty("closed", true);
+            this.closedList.push(object);
+        }
+    }
+
+    async addToOpenList(startPoint: Point, endPoint: Point, point: Point) {
+        const repeat = this.isInOpenList(new Point(point.x, point.y));
+        let object = this.addCostsToGameObject(startPoint, endPoint, new Point(point.x, point.y));
+        if (!repeat && !this.closed(object)) {
+            this.openList.push(object);
+        }
+    }
+
+    notObstacle(point: Point, obstacleNumberRepresentation: number) {
+        return this.matrix[point.x][point.y] !== obstacleNumberRepresentation;
+    }
+
+    computeNextNodeChoice = async (point: Point) => {
 
         let startPoint = new Point(this.startNode.props["coords"].x, this.startNode.props["coords"].y);
         let endPoint = new Point(this.endNode.props["coords"].x, this.endNode.props["coords"].y);
         let returnedGameObject;
 
         if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y]) {
-            if (this.matrix[point.x + 1][point.y] !== 4) {
-                const repeat = this.isInOpenList(new Point(point.x + 1, point.y));
-                let object = await this.addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y));
-                if (!repeat && !this.closed(object)) this.openList.push(object);
+            if (this.notObstacle(new Point(point.x + 1, point.y), 4)) {
+                this.addToOpenList(startPoint, endPoint, new Point(point.x + 1, point.y));
             }
         }
 
         if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y]) {
-            if (this.matrix[point.x - 1][point.y] !== 4) {
-                const repeat = this.isInOpenList(new Point(point.x - 1, point.y));
-                let object = await this.addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y));
-                if (!repeat && !this.closed(object)) this.openList.push(object);
+            if (this.notObstacle(new Point(point.x - 1, point.y), 4)) {
+                this.addToOpenList(startPoint, endPoint, new Point(point.x - 1, point.y));
             }
         }
 
         if (this.matrix[point.x] && this.matrix[point.x][point.y + 1]) {
-            if (this.matrix[point.x][point.y + 1] !== 4) {
-                const repeat = this.isInOpenList(new Point(point.x, point.y + 1));
-                let object = await this.addCostsToGameObject(startPoint, endPoint, new Point(point.x, point.y + 1));
-                if (!repeat && !this.closed(object)) this.openList.push(object);
+            if (this.notObstacle(new Point(point.x, point.y + 1), 4)) {
+                this.addToOpenList(startPoint, endPoint, new Point(point.x, point.y + 1));
             }
         }
 
         if (this.matrix[point.x] && this.matrix[point.x][point.y - 1]) {
-            if (this.matrix[point.x][point.y - 1] !== 4) {
-                const repeat = this.isInOpenList(new Point(point.x, point.y - 1));
-                let object = await this.addCostsToGameObject(startPoint, endPoint, new Point(point.x, point.y - 1));
-                if (!repeat && !this.closed(object)) this.openList.push(object);
+            if (this.notObstacle(new Point(point.x, point.y - 1), 4)) {
+                this.addToOpenList(startPoint, endPoint, new Point(point.x, point.y - 1));
             }
         }
 
         if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y + 1]) {
-            if (this.matrix[point.x - 1][point.y + 1] !== 4) {
-                const repeat = this.isInOpenList(new Point(point.x - 1, point.y + 1));
-                let object = await this.addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y + 1))
-                if (!repeat && !this.closed(object)) this.openList.push(object);
+            if (this.notObstacle(new Point(point.x - 1, point.y + 1), 4)) {
+                this.addToOpenList(startPoint, endPoint, new Point(point.x - 1, point.y + 1));
             }
         }
 
         if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y + 1]) {
-            if (this.matrix[point.x + 1][point.y + 1] !== 4) {
-                const repeat = this.isInOpenList(new Point(point.x + 1, point.y + 1));
-                let object = await this.addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y + 1));
-                if (!repeat && !this.closed(object)) this.openList.push(object);
+            if (this.notObstacle(new Point(point.x + 1, point.y + 1), 4)) {
+                this.addToOpenList(startPoint, endPoint, new Point(point.x + 1, point.y + 1));
             }
         }
 
         if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y - 1]) {
-            if (this.matrix[point.x - 1][point.y - 1] !== 4) {
-                const repeat = this.isInOpenList(new Point(point.x - 1, point.y - 1));
-                let object = await this.addCostsToGameObject(startPoint, endPoint, new Point(point.x - 1, point.y - 1));
-                if (!repeat && !this.closed(object)) this.openList.push(object);
+            if (this.notObstacle(new Point(point.x - 1, point.y - 1), 4)) {
+                this.addToOpenList(startPoint, endPoint, new Point(point.x - 1, point.y - 1));
             }
         }
 
         if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y - 1]) {
-            if (this.matrix[point.x + 1][point.y - 1] !== 4) {
-                const repeat = this.isInOpenList(new Point(point.x + 1, point.y - 1));
-                let object = await this.addCostsToGameObject(startPoint, endPoint, new Point(point.x + 1, point.y - 1));
-                if (!repeat && !this.closed(object)) this.openList.push(object);
+            if (this.notObstacle(new Point(point.x + 1, point.y - 1), 4)) {
+                this.addToOpenList(startPoint, endPoint, new Point(point.x + 1, point.y - 1));
             }
         }
 
         this.openList.sort(Pathfinding.A_STAR_COST_SORTING);
-
-        if (!this.openList[0].props.start && !this.openList[0].props.end && !this.openList[0].props.wall && !this.openList[0].props.closed) {
-            this.openList[0].color = "pink";
-            this.openList[0].addProperty("closed", true);
-            this.closedList.push(this.openList[0]);
-        }
+        console.log(this.openList[0].props.fCost, this.openList[0].props.hCost)
+        this.addToClosedList(this.openList[0]);
 
         returnedGameObject = this.openList[0];
         this.openList.shift();
@@ -303,7 +293,7 @@ export default class Pathfinding implements Renderable {
     async run() {
         while (!this.currentNode.props["end"]) {
             await Sleep.now(this.speed);
-            this.currentNode = await this.calculateCosts(this.currentNode.props["coords"]);
+            this.currentNode = await this.computeNextNodeChoice(this.currentNode.props["coords"]);
         }
     }
 }
