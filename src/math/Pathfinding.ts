@@ -38,6 +38,7 @@ export default class Pathfinding implements Renderable {
     xEnd?: number;
     yEnd?: number;
     speed?: number;
+    allowDiagonal?: boolean;
     seed?: number[][];
 
     currentNode: GameObject;
@@ -51,7 +52,7 @@ export default class Pathfinding implements Renderable {
     start: Point;
     end: Point;
 
-    constructor(screen, render, rows, xStart, yStart, xEnd, yEnd, speed, seed) {
+    constructor(screen, render, rows, xStart, yStart, xEnd, yEnd, speed, allowDiagonal, seed) {
         // Gcost = distance from current node to the start node.
         // Hcost = distance from current node to the end node.
         // Fcost = Gcost + Hcost.
@@ -61,6 +62,7 @@ export default class Pathfinding implements Renderable {
         this.render = render;
         this.rows = rows;
         this.speed = speed;
+        this.allowDiagonal = allowDiagonal;
 
         this.closedList = [], this.openList = [], this.bestPath = [], this.tracker = [];
 
@@ -256,28 +258,35 @@ export default class Pathfinding implements Renderable {
                 this.addToOpenList(startPoint, endPoint, new Point(point.x, point.y - 1));
             }
         }
-
-        if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y + 1]) {
-            if (this.notObstacle(new Point(point.x - 1, point.y + 1), 4)) {
-                this.addToOpenList(startPoint, endPoint, new Point(point.x - 1, point.y + 1));
+        
+        if (this.allowDiagonal) {
+            if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y + 1]) {
+                if (this.notObstacle(new Point(point.x - 1, point.y + 1), 4)) {
+                    this.addToOpenList(startPoint, endPoint, new Point(point.x - 1, point.y + 1));
+                }
             }
         }
 
-        if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y + 1]) {
-            if (this.notObstacle(new Point(point.x + 1, point.y + 1), 4)) {
-                this.addToOpenList(startPoint, endPoint, new Point(point.x + 1, point.y + 1));
+        if (this.allowDiagonal) {
+            if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y + 1]) {
+                if (this.notObstacle(new Point(point.x + 1, point.y + 1), 4)) {
+                    this.addToOpenList(startPoint, endPoint, new Point(point.x + 1, point.y + 1));
+                }
+            }
+        }
+        if (this.allowDiagonal) {
+            if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y - 1]) {
+                if (this.notObstacle(new Point(point.x - 1, point.y - 1), 4)) {
+                    this.addToOpenList(startPoint, endPoint, new Point(point.x - 1, point.y - 1));
+                }
             }
         }
 
-        if (this.matrix[point.x - 1] && this.matrix[point.x - 1][point.y - 1]) {
-            if (this.notObstacle(new Point(point.x - 1, point.y - 1), 4)) {
-                this.addToOpenList(startPoint, endPoint, new Point(point.x - 1, point.y - 1));
-            }
-        }
-
-        if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y - 1]) {
-            if (this.notObstacle(new Point(point.x + 1, point.y - 1), 4)) {
-                this.addToOpenList(startPoint, endPoint, new Point(point.x + 1, point.y - 1));
+        if (this.allowDiagonal) {
+            if (this.matrix[point.x + 1] && this.matrix[point.x + 1][point.y - 1]) {
+                if (this.notObstacle(new Point(point.x + 1, point.y - 1), 4)) {
+                    this.addToOpenList(startPoint, endPoint, new Point(point.x + 1, point.y - 1));
+                }
             }
         }
 
