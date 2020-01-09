@@ -1,8 +1,10 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 let bdv = require("./dist/src/core/bdv").default;
 
+// CREATE CANVAS ELEMENT!!
+
 window.onload = function () {
-    let test = new bdv("CANVAS_ID", 1024, 768);
+    let test = new bdv(1024, 768);
     test.activateCanvasRendering();
     // test.grid(10, 10);
     // test.aStar(25, 25, 10, 12, 8, 12);
@@ -150,7 +152,7 @@ var map_json_1 = __importDefault(require("../../map.json"));
 var Conways_1 = __importDefault(require("../math/Conways"));
 var Pathfinding_1 = __importDefault(require("../math/Pathfinding"));
 var bdv = /** @class */ (function () {
-    function bdv(canvasId, width, height) {
+    function bdv(width, height) {
         var _this = this;
         this.activateCanvasRendering = function () {
             _this.render = new CanvasRenderer_1.default(_this.canvasId, _this.dimensions.width, _this.dimensions.height);
@@ -231,10 +233,15 @@ var bdv = /** @class */ (function () {
         this.gridFromMapFile = function () {
             console.log(map_json_1.default);
         };
-        this.canvasId = canvasId;
+        this.canvasId = "CANVAS_ID";
         this.dimensions = new Dimension_1.default(width, height);
         this.render = null;
         this.render2 = null;
+        var element = document.createElement('CANVAS');
+        element.setAttribute("id", "CANVAS_ID");
+        element.setAttribute("width", String(width));
+        element.setAttribute("height", String(height));
+        document.body.appendChild(element);
     }
     bdv.prototype.RGB = function () {
         return { r: Math.floor(Math.random() * 255), g: Math.floor(Math.random() * 255), b: Math.floor(Math.random() * 255) };

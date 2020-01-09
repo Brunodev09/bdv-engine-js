@@ -26,11 +26,17 @@ export default class bdv {
     render2: null | ImageDataRender;
     stage: Stage;
 
-    constructor(canvasId: string, width: number, height: number) {
-        this.canvasId = canvasId;
+    constructor(width: number, height: number) {
+        this.canvasId = "CANVAS_ID";
         this.dimensions = new Dimension(width, height);
         this.render = null;
         this.render2 = null;
+
+        let element = document.createElement('CANVAS');
+        element.setAttribute("id", "CANVAS_ID");
+        element.setAttribute("width", String(width));
+        element.setAttribute("height", String(height));
+        document.body.appendChild(element);
     }
 
     activateCanvasRendering = () => {
@@ -48,14 +54,14 @@ export default class bdv {
         this.render.clear();
     }
 
-    newGameObject = (model: string, positionX: number, positionY: number, width: number, height: number, color: string, font?: string, message?: string) => {
+    newGameObject = (model: string, positionX: number, positionY: number, width: number, height: number, color: string, font?: string, message?: string): GameObject => {
         let object = new GameObject(Model[model], new Point(positionX, positionY), new Dimension(width, height), color, font, message);
         this.render.requestStage(object);
 
         return object;
     }
 
-    newGameObjectArray = (model: string, positions: number[][], color: string, font?: string, message?: string) => {
+    newGameObjectArray = (model: string, positions: number[][], color: string, font?: string, message?: string): GameObject => {
         let aux = [];
         for (let point of positions) {
             let aux2 = [];
