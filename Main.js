@@ -24,7 +24,7 @@ window.onload = function () {
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
 
-    let movingSquare = test.movingSquares();
+    let movingSquare = test.drawingVectors();
     // let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
     // let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
     // let myGrid = test.grid(50, 50);

@@ -58,6 +58,7 @@ export default class bdvRender {
                     break;
                 case Model.POINTS:
                 case Model.POINTS_BORDER:
+                case Model.VECTOR:    
                     this.path(object);
                     break;
                 case Model.CIRCLE:
@@ -120,7 +121,7 @@ export default class bdvRender {
             this.ctx.fillStyle = object.color;
             this.ctx.fill();
         }
-        else if (object.model === Model.POINTS_BORDER) {
+        else if (object.model === Model.POINTS_BORDER || object.model === Model.VECTOR) {
             this.ctx.strokeStyle = object.color;
             this.ctx.stroke();
         }

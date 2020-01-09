@@ -10,4 +10,5 @@ export enum Model {
     CIRCLE = "CIRCLE",
     CIRCLE_BORDER = "CIRCLE_BORDER",
     ARC = "ARC",
+    VECTOR = "VECTOR"
 }
