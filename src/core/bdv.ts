@@ -7,6 +7,8 @@
 // @TODO - Expand pixel rendering, perlin noise and mandelbrots.
 // @TODO - Easy networking.
 
+//@TODO - Create behaviour class for GameObjects.
+
 import bdvRender from "../render/CanvasRenderer";
 import ImageDataRender from "../render/PixelRenderer";
 import Stage from "../render/Stage";
@@ -89,22 +91,43 @@ export default class bdv {
         return { r: Math.floor(Math.random() * 255), g: Math.floor(Math.random() * 255), b: Math.floor(Math.random() * 255) }
     }
 
-    movingSquares = () => {
-        let object = new GameObject(Model.RECTANGLE, new Point(100, 100), new Dimension(100, 100), "purple");
-        this.render.requestStage(object);
-        let speedX = 5, speedY = 5;
+    Vector2D(object1: GameObject, object2: GameObject, color?: string) {
+        // If no color is attributed, a transparent vector will be created.
+        if (!color) color = `rgb(0, 0, 0, 0)`;
+        return new GameObject(Model.VECTOR, [object1.middle, object2.middle], new Dimension(0, 0), color);
+    }
+
+    drawingVectors = () => {
+        let object1 = new GameObject(Model.RECTANGLE, new Point(280, 300), new Dimension(100, 100), "blue");
+        let object2 = new GameObject(Model.RECTANGLE, new Point(100, 300), new Dimension(100, 100), "red");
+
+        object1.addProperty("speedX", 3);
+        object1.addProperty("speedY", 3);
+        object1.erraticMovement();
+
+        object2.addProperty("speedX", 30);
+        object2.addProperty("speedY", 30);
+        object2.isPlayer(true);
+
+        this.connectVector(object2, object1);
+
+        // object1.follow(object2);
+
+        this.render.requestStage(object1);
+        this.render.requestStage(object2);
 
         setInterval(() => {
-            (<Point>object.position).x += speedX;
-            (<Point>object.position).y += speedY;
-            if ((<Point>object.position).x > this.dimensions.width || (<Point>object.position).x < 0) speedX = -speedX;
-            if ((<Point>object.position).y > this.dimensions.height || (<Point>object.position).y < 0) speedY = -speedY;
-        }, 10);
-        setInterval(() => {
-            let { r, g, b } = this.RGB();
-            object.color = `rgb(${r},${g},${b})`;
-        }, 1000);
-    };
+            object2.collision(object1);
+            object1.update();
+            object2.update();
+        }, 15);
+    }
+
+    connectVector(follower: GameObject, followed: GameObject): GameObject {
+        let vec = this.Vector2D(followed, follower, "white");
+        this.render.requestStage(vec);
+        return vec;
+    }
 
     grid = (rowsX: number, rowsY: number) => {
         let matrix = [], tracker = [];

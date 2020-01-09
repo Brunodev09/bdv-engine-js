@@ -19,6 +19,6 @@ export default class Vector2D {
     }
 
     static magnitude(vec: Vector2D): number {
-        return Math.abs(vec.xComponent * vec.xComponent + vec.yComponent * vec.yComponent);
+        return Math.abs((vec.xComponent ^ 2) + (vec.yComponent ^ 2));
     }
 }
