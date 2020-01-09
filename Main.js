@@ -1,7 +1,7 @@
 let bdv = require("./dist/src/core/bdv").default;
 
 window.onload = function () {
-    let test = new bdv("CANVAS_ID", 1024, 768);
+    let test = new bdv(1024, 768);
     test.activateCanvasRendering();
     // test.grid(10, 10);
     // test.aStar(25, 25, 10, 12, 8, 12);
