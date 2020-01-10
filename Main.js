@@ -3,7 +3,9 @@ let bdv = require("./dist/src/core/bdv").default;
 window.onload = function () {
     let test = new bdv(1024, 768);
     test.activateCanvasRendering();
-    // test.grid(10, 10);
+    let a = test.grid(300, 300);
+    let c = test.createCircle(150, 50, 50, "red");
+    let d = test.circleSpawner(a, [c]);
     // test.aStar(25, 25, 10, 12, 8, 12);
     // test.aStar(25, 25, 5, 5, 10, 5, 1000, null);
     // test.aStar(50, 50, null, null, null, null, 50, null);
@@ -24,9 +26,10 @@ window.onload = function () {
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
 
-    let movingSquare = test.drawingVectors();
+    // let movingSquare = test.drawingVectors();
     // let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
     // let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
     // let myGrid = test.grid(50, 50);
     // let life = test.conways(50, 50);
 }
+

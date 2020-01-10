@@ -4,7 +4,9 @@ let bdv = require("./dist/src/core/bdv").default;
 window.onload = function () {
     let test = new bdv(1024, 768);
     test.activateCanvasRendering();
-    // test.grid(10, 10);
+    let a = test.grid(300, 300);
+    let c = test.createCircle(150, 50, 50, "red");
+    let d = test.circleSpawner(a, [c]);
     // test.aStar(25, 25, 10, 12, 8, 12);
     // test.aStar(25, 25, 5, 5, 10, 5, 1000, null);
     // test.aStar(50, 50, null, null, null, null, 50, null);
@@ -25,12 +27,13 @@ window.onload = function () {
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
 
-    let movingSquare = test.drawingVectors();
+    // let movingSquare = test.drawingVectors();
     // let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
     // let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
     // let myGrid = test.grid(50, 50);
     // let life = test.conways(50, 50);
 }
+
 
 },{"./dist/src/core/bdv":8}],2:[function(require,module,exports){
 module.exports={
@@ -216,7 +219,7 @@ var GameObject = /** @class */ (function () {
 }());
 exports.default = GameObject;
 
-},{"../collision/CollisionManager":3,"../core/Model":7,"../math/Point":13,"../math/Vector2D":14,"./Behaviour":5}],7:[function(require,module,exports){
+},{"../collision/CollisionManager":3,"../core/Model":7,"../math/Point":14,"../math/Vector2D":15,"./Behaviour":5}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Model;
@@ -292,6 +295,7 @@ var Model_1 = require("./Model");
 var GameObject_1 = __importDefault(require("./GameObject"));
 var Dimension_1 = __importDefault(require("../math/Dimension"));
 var Point_1 = __importDefault(require("../math/Point"));
+var Circle_1 = require("../math/Circle");
 var map_json_1 = __importDefault(require("../../map.json"));
 var Conways_1 = __importDefault(require("../math/Conways"));
 var Pathfinding_1 = __importDefault(require("../math/Pathfinding"));
@@ -330,8 +334,36 @@ var bdv = /** @class */ (function () {
             _this.render.requestStage(object);
             return object;
         };
-        this.circle = function (x, y, r, t, c) {
-            _this.render.arc(new Point_1.default(x, y), r, t, c);
+        this.circleSpawner = function (grid, circles) {
+            grid = _this.addCoordinatesToGrid(grid);
+            var spawner = new Circle_1.CircleSpawner(grid, circles);
+            var c = spawner.getGeneratedCircles();
+            console.log(c);
+            setInterval(function () {
+                var howManyPixels = Math.floor(Math.random() * 20);
+                var _a = _this.RGB(), r = _a.r, g = _a.g, b = _a.b, a = _a.a;
+                for (var _i = 0, c_1 = c; _i < c_1.length; _i++) {
+                    var circle = c_1[_i];
+                    for (var _b = 0, _c = circle.points; _b < _c.length; _b++) {
+                        var point = _c[_b];
+                        if (howManyPixels <= 0) {
+                            var newColors = _this.RGB();
+                            r = newColors.r;
+                            g = newColors.g;
+                            b = newColors.b;
+                            a = newColors.a;
+                            howManyPixels = Math.floor(Math.random() * 1000);
+                        }
+                        // if (Math.floor(Math.random() * 2) === 1) grid[point.y][point.x].color = `rgb(${r},${g},${b},${a})`;
+                        // else grid[point.x][point.y].color = `rgb(${r},${g},${b},${a})`;
+                        grid[point.x][point.y].color = "rgb(" + r + "," + g + "," + b + "," + a + ")";
+                        howManyPixels--;
+                    }
+                }
+            }, 100);
+        };
+        this.createCircle = function (cx, cy, r, c) {
+            return new Circle_1.Circle(new Point_1.default(cx, cy), r, c);
         };
         this.write = function (message, font, x, y, color) {
             // this.render.fill(new TextFont(message, font), new Point(x, y), null, color);
@@ -358,19 +390,22 @@ var bdv = /** @class */ (function () {
         this.grid = function (rowsX, rowsY) {
             var matrix = [], tracker = [];
             var tileSize = new Dimension_1.default(Math.round(_this.dimensions.width / rowsX), Math.round(_this.dimensions.height / rowsY));
-            for (var i = 0; i <= rowsX; i++)
+            for (var i = 0; i < rowsX; i++)
                 matrix[i] = new Array(rowsY);
+            for (var i = 0; i < rowsX; i++)
+                tracker[i] = new Array(rowsY);
             for (var i = 0; i < matrix.length; i++) {
                 for (var j = 0; j < matrix[i].length; j++) {
                     matrix[i][j] = 0;
                 }
             }
             for (var i = 0; i < matrix.length; i++) {
-                for (var j = 0; j < matrix.length; j++) {
+                for (var j = 0; j < matrix[i].length; j++) {
                     if (matrix[i][j] === 0) {
-                        var object = new GameObject_1.default(Model_1.Model.RECTANGLE_BORDER, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "white");
+                        var object = new GameObject_1.default(Model_1.Model.RECTANGLE_BORDER, new Point_1.default(i * tileSize.width + i, j * tileSize.height + j), new Dimension_1.default(tileSize.width, tileSize.height), "black");
+                        object.props["coords"] = new Point_1.default(i, j);
                         _this.render.requestStage(object);
-                        tracker.push(object);
+                        tracker[i][j] = object;
                     }
                 }
             }
@@ -389,8 +424,16 @@ var bdv = /** @class */ (function () {
         element.setAttribute("height", String(height));
         document.body.appendChild(element);
     }
+    bdv.prototype.addCoordinatesToGrid = function (grid) {
+        for (var i = 0; i < grid.length; i++) {
+            for (var j = 0; j < grid[i].length; j++) {
+                grid[i][j].props["coords"] = new Point_1.default(i, j);
+            }
+        }
+        return grid;
+    };
     bdv.prototype.RGB = function () {
-        return { r: Math.floor(Math.random() * 255), g: Math.floor(Math.random() * 255), b: Math.floor(Math.random() * 255) };
+        return { r: Math.floor(Math.random() * 255), g: Math.floor(Math.random() * 255), b: Math.floor(Math.random() * 255), a: Math.floor(Math.random() * 255) };
     };
     bdv.prototype.Vector2D = function (object1, object2, color) {
         // If no color is attributed, a transparent vector will be created.
@@ -417,7 +460,52 @@ var bdv = /** @class */ (function () {
 }());
 exports.default = bdv;
 
-},{"../../map.json":2,"../math/Conways":9,"../math/Dimension":10,"../math/Pathfinding":12,"../math/Point":13,"../render/CanvasRenderer":15,"../render/PixelRenderer":16,"./GameObject":6,"./Model":7}],9:[function(require,module,exports){
+},{"../../map.json":2,"../math/Circle":9,"../math/Conways":10,"../math/Dimension":11,"../math/Pathfinding":13,"../math/Point":14,"../render/CanvasRenderer":16,"../render/PixelRenderer":17,"./GameObject":6,"./Model":7}],9:[function(require,module,exports){
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var Point_1 = __importDefault(require("./Point"));
+var Geometry_1 = __importDefault(require("./Geometry"));
+var CircleSpawner = /** @class */ (function () {
+    function CircleSpawner(grid, circles) {
+        this.generatedCircles = [];
+        for (var _i = 0, circles_1 = circles; _i < circles_1.length; _i++) {
+            var circle = circles_1[_i];
+            for (var x = 0; x < grid.length; x++) {
+                for (var y = 0; y < grid[x].length; y++) {
+                    if (grid[x][y].props["coords"].x === circle.origin.x && grid[x][y].props["coords"].y === circle.origin.y) {
+                        grid[x][y].color = circle.color;
+                        circle.points.push(new Point_1.default(x, y));
+                    }
+                    else if (Geometry_1.default.isPointInsideCircle(new Point_1.default(grid[x][y].props["coords"].x, grid[x][y].props["coords"].y), circle.origin, circle.radius)) {
+                        grid[x][y].color = circle.color;
+                        circle.points.push(new Point_1.default(x, y));
+                    }
+                }
+            }
+            this.generatedCircles.push(circle);
+        }
+    }
+    CircleSpawner.prototype.getGeneratedCircles = function () {
+        return this.generatedCircles;
+    };
+    return CircleSpawner;
+}());
+exports.CircleSpawner = CircleSpawner;
+var Circle = /** @class */ (function () {
+    function Circle(origin, radius, color) {
+        this.origin = origin;
+        this.radius = radius;
+        this.color = color;
+        this.points = [];
+    }
+    return Circle;
+}());
+exports.Circle = Circle;
+
+},{"./Geometry":12,"./Point":14}],10:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -542,7 +630,7 @@ var Conways = /** @class */ (function () {
 }());
 exports.default = Conways;
 
-},{"../core/GameObject":6,"../core/Model":7,"./Dimension":10,"./Geometry":11,"./Point":13}],10:[function(require,module,exports){
+},{"../core/GameObject":6,"../core/Model":7,"./Dimension":11,"./Geometry":12,"./Point":14}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Dimension = /** @class */ (function () {
@@ -554,7 +642,7 @@ var Dimension = /** @class */ (function () {
 }());
 exports.default = Dimension;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Geometry = /** @class */ (function () {
@@ -569,11 +657,17 @@ var Geometry = /** @class */ (function () {
             m[i] = new Array(dimensions.height);
         return m;
     };
+    Geometry.isPointInsideCircle = function (point, center, radius) {
+        if (Geometry.distanceBetweenPoints(point, center) >= radius)
+            return false;
+        else
+            return true;
+    };
     return Geometry;
 }());
 exports.default = Geometry;
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -890,7 +984,7 @@ var Pathfinding = /** @class */ (function () {
 }());
 exports.default = Pathfinding;
 
-},{"../core/GameObject":6,"../core/Model":7,"../utils/Sleep":18,"./Dimension":10,"./Geometry":11,"./Point":13}],13:[function(require,module,exports){
+},{"../core/GameObject":6,"../core/Model":7,"../utils/Sleep":19,"./Dimension":11,"./Geometry":12,"./Point":14}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Point = /** @class */ (function () {
@@ -902,7 +996,7 @@ var Point = /** @class */ (function () {
 }());
 exports.default = Point;
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Vector2D = /** @class */ (function () {
@@ -927,7 +1021,7 @@ var Vector2D = /** @class */ (function () {
 }());
 exports.default = Vector2D;
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -1069,7 +1163,7 @@ var bdvRender = /** @class */ (function () {
 }());
 exports.default = bdvRender;
 
-},{"../core/Model":7,"../math/Dimension":10,"../math/Point":13,"./Stage":17}],16:[function(require,module,exports){
+},{"../core/Model":7,"../math/Dimension":11,"../math/Point":14,"./Stage":18}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var ImageDataRender = /** @class */ (function () {
@@ -1138,7 +1232,7 @@ var ImageDataRender = /** @class */ (function () {
 }());
 exports.default = ImageDataRender;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Stage = /** @class */ (function () {
@@ -1149,7 +1243,7 @@ var Stage = /** @class */ (function () {
 }());
 exports.default = Stage;
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Sleep = /** @class */ (function () {
