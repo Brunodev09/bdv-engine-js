@@ -16,6 +16,7 @@ import { Model } from "./Model";
 import GameObject from "./GameObject";
 import Dimension from "../math/Dimension";
 import Point from "../math/Point";
+import { Circle, CircleSpawner } from "../math/Circle";
 
 import mapFile from "../../map.json";
 import Conways from "../math/Conways";
@@ -63,6 +64,16 @@ export default class bdv {
         return object;
     }
 
+    addCoordinatesToGrid(grid: GameObject[][]): GameObject[][] {
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                grid[i][j].props["coords"] = new Point(i, j);
+            }
+        }
+
+        return grid;
+    }
+
     newGameObjectArray = (model: string, positions: number[][], color: string, font?: string, message?: string): GameObject => {
         let aux = [];
         for (let point of positions) {
@@ -78,8 +89,35 @@ export default class bdv {
         return object;
     }
 
-    circle = (x: number, y: number, r: number, t?: string, c?: string) => {
-        this.render.arc(new Point(x, y), r, t, c);
+    circleSpawner = (grid: GameObject[][], circles: Circle[]) => {
+        grid = this.addCoordinatesToGrid(grid);
+        let spawner = new CircleSpawner(grid, circles);
+        let c = spawner.getGeneratedCircles();
+        console.log(c)
+        setInterval(() => {
+            let howManyPixels = Math.floor(Math.random() * 20);
+            let {r, g, b, a} = this.RGB();
+            for (let circle of c) {
+                for (let point of circle.points) {
+                    if (howManyPixels <= 0) {
+                        let newColors = this.RGB();
+                        r = newColors.r;
+                        g = newColors.g;
+                        b = newColors.b;
+                        a = newColors.a;
+                        howManyPixels = Math.floor(Math.random() * 1000);
+                    }
+                    // if (Math.floor(Math.random() * 2) === 1) grid[point.y][point.x].color = `rgb(${r},${g},${b},${a})`;
+                    // else grid[point.x][point.y].color = `rgb(${r},${g},${b},${a})`;
+                    grid[point.x][point.y].color = `rgb(${r},${g},${b},${a})`;
+                    howManyPixels--;
+                }
+            }
+        }, 100);
+    }
+
+    createCircle = (cx: number, cy: number, r: number, c: string) => {
+        return new Circle(new Point(cx, cy), r, c);
     }
 
 
@@ -88,7 +126,7 @@ export default class bdv {
     }
 
     RGB() {
-        return { r: Math.floor(Math.random() * 255), g: Math.floor(Math.random() * 255), b: Math.floor(Math.random() * 255) }
+        return { r: Math.floor(Math.random() * 255), g: Math.floor(Math.random() * 255), b: Math.floor(Math.random() * 255), a: Math.floor(Math.random() * 255)}
     }
 
     Vector2D(object1: GameObject, object2: GameObject, color?: string) {
@@ -133,7 +171,8 @@ export default class bdv {
         let matrix = [], tracker = [];
         const tileSize = new Dimension(Math.round(this.dimensions.width / rowsX), Math.round(this.dimensions.height / rowsY));
 
-        for (let i = 0; i <= rowsX; i++) matrix[i] = new Array(rowsY);
+        for (let i = 0; i < rowsX; i++) matrix[i] = new Array(rowsY);
+        for (let i = 0; i < rowsX; i++) tracker[i] = new Array(rowsY);
 
         for (let i = 0; i < matrix.length; i++) {
             for (let j = 0; j < matrix[i].length; j++) {
@@ -142,11 +181,12 @@ export default class bdv {
         }
 
         for (let i = 0; i < matrix.length; i++) {
-            for (let j = 0; j < matrix.length; j++) {
+            for (let j = 0; j < matrix[i].length; j++) {
                 if (matrix[i][j] === 0) {
-                    let object = new GameObject(Model.RECTANGLE_BORDER, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), "white");
+                    let object = new GameObject(Model.RECTANGLE_BORDER, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), "black");
+                    object.props["coords"] = new Point(i, j);
                     this.render.requestStage(object);
-                    tracker.push(object);
+                    tracker[i][j] = object;
                 }
             }
         }

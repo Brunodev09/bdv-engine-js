@@ -14,4 +14,9 @@ export default class Geometry {
         return m;
     }
 
+    static isPointInsideCircle(point: Point, center: Point, radius: number) {
+        if (Geometry.distanceBetweenPoints(point, center) >= radius) return false;
+        else return true;
+    }
+
 }
