@@ -5,7 +5,7 @@ window.onload = function () {
     test.activateCanvasRendering();
 
     let a = test.grid(150, 150);
-    let equation = [-1, 0, 1]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
+    let equation = [-1, 1, 1, 1]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
     test.plotFunction(a, equation, "squared", [-100, 100]);
 
     // let pixel = test.pixelDoodling(a);
