@@ -7,7 +7,7 @@
 // @TODO - Expand pixel rendering, perlin noise and mandelbrots.
 // @TODO - Easy networking.
 
-//@TODO - Create behaviour class for GameObjects.
+//@TODO - Add closures to all classes
 
 import bdvRender from "../render/CanvasRenderer";
 import ImageDataRender from "../render/PixelRenderer";
@@ -21,6 +21,8 @@ import { Circle, CircleSpawner } from "../math/Circle";
 import mapFile from "../../map.json";
 import Conways from "../math/Conways";
 import Pathfinding from "../math/Pathfinding";
+import Pixel from "../math/Pixel";
+import Sinwave from "../math/Sinwave";
 
 export default class bdv {
     canvasId: string;
@@ -90,10 +92,9 @@ export default class bdv {
     }
 
     circleSpawner = (grid: GameObject[][], circles: Circle[]) => {
-        grid = this.addCoordinatesToGrid(grid);
+        // grid = this.addCoordinatesToGrid(grid);
         let spawner = new CircleSpawner(grid, circles);
         let c = spawner.getGeneratedCircles();
-        console.log(c)
         setInterval(() => {
             let howManyPixels = Math.floor(Math.random() * 20);
             let {r, g, b, a} = this.RGB();
@@ -114,6 +115,54 @@ export default class bdv {
                 }
             }
         }, 100);
+    }
+
+    pixelDoodling = (grid: GameObject[][]) => {
+        let pixel = new Pixel(grid);
+        // let points = pixel.generate();
+        let sinWaves = new Sinwave();
+        sinWaves.populateGridWithSinValues(grid);
+        for (let x = 0; x < grid.length; x++) {
+            for (let y = 0; y < grid.length; y++) {
+                if (sinWaves.isPointPartOfSinPlot(new Point(grid[x][y].props.xValue, grid[x][y].props.yValue))) {
+                    grid[x][y].color = "red";
+                    grid[x][y].addProperty("isPointSin", true);
+                }
+            }
+        }
+
+        for (let x = 0; x < grid.length; x++) {
+            let limitY = null;
+            for (let y = 0; y < grid.length; y++) {
+                if (grid[x][y].props.isPointSin !== null && grid[x][y].props.isPointSin !== undefined) limitY = y;
+                if (limitY !== null && y > limitY) grid[x][y].color = "grey";
+            }
+        }
+        // for (let point of points) {
+        //     setTimeout(() => {
+        //         if (Math.floor(Math.random() * 10) === 0) grid[point.x][point.y].color = "white";
+        //         else grid[point.x][point.y].color = "red";
+        //     }, 10)
+        // }
+
+        // setInterval(() => {
+        //     let {r, g, b, a} = this.RGB();
+
+        //     for (let point of points) {
+        //         if (Math.floor(Math.random() * 10) === 1) {
+        //             if (r >= 255) r = 0;
+        //             else r++;
+        //             if (g >= 255) g = 0;
+        //             else g++;
+        //             if (b >= 255) b = 0;
+        //             else b++;
+        //             if (a >= 255) a = 0;
+        //             else a++;
+        //         }
+        //         grid[point.x][point.y].color = `rgb(${r},${g},${b}, ${a})`;
+        //     }
+        // }, 10);
+        
     }
 
     createCircle = (cx: number, cy: number, r: number, c: string) => {
@@ -183,7 +232,7 @@ export default class bdv {
         for (let i = 0; i < matrix.length; i++) {
             for (let j = 0; j < matrix[i].length; j++) {
                 if (matrix[i][j] === 0) {
-                    let object = new GameObject(Model.RECTANGLE_BORDER, new Point(i * tileSize.width + i, j * tileSize.height + j), new Dimension(tileSize.width, tileSize.height), "black");
+                    let object = new GameObject(Model.RECTANGLE_BORDER, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "black");
                     object.props["coords"] = new Point(i, j);
                     this.render.requestStage(object);
                     tracker[i][j] = object;
