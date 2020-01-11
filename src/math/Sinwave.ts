@@ -7,6 +7,7 @@ export default class Sinwave {
     sin: number;
     angle: number;
     grid: GameObject[][];
+    
     constructor() {
         this.division = null;
         this.division2 = null;

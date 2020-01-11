@@ -7,7 +7,7 @@
 // @TODO - Expand pixel rendering, perlin noise and mandelbrots.
 // @TODO - Easy networking.
 
-//@TODO - Add closures to all classes
+// @TODO - Add closures to all classes
 
 import bdvRender from "../render/CanvasRenderer";
 import ImageDataRender from "../render/PixelRenderer";
@@ -23,6 +23,7 @@ import Conways from "../math/Conways";
 import Pathfinding from "../math/Pathfinding";
 import Pixel from "../math/Pixel";
 import Sinwave from "../math/Sinwave";
+import Plot from "../math/Plot";
 
 export default class bdv {
     canvasId: string;
@@ -115,6 +116,24 @@ export default class bdv {
                 }
             }
         }, 100);
+    }
+
+    plotFunction(grid: GameObject[][], equation: number[], propertyName: string, xInterval: [2]) {
+        let xAxis = this.newGameObjectArray(Model.POINTS, [[0, this.dimensions.height / 2], [this.dimensions.height / 2, this.dimensions.width]], "black");
+        this.render.requestStage(xAxis);
+        let plot = new Plot(grid, equation, propertyName, xInterval);
+        const propertyNameX = propertyName + "X";
+        const propertyNameY = propertyName + "Y";
+        grid = plot.populateGridWithFunctionValues();
+        for (let x = 0; x < grid.length; x++) {
+            for (let y = 0; y < grid.length; y++) {
+                if (plot.isPointInFunction(new Point(grid[x][y].props[propertyNameX], grid[x][y].props[propertyNameY]))) {
+                    grid[x][y].color = "red";
+                    break;
+                }
+            }
+        }
+        
     }
 
     pixelDoodling = (grid: GameObject[][]) => {
@@ -232,7 +251,7 @@ export default class bdv {
         for (let i = 0; i < matrix.length; i++) {
             for (let j = 0; j < matrix[i].length; j++) {
                 if (matrix[i][j] === 0) {
-                    let object = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "lightblue");
+                    let object = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "white");
                     object.props["coords"] = new Point(i, j);
                     this.render.requestStage(object);
                     tracker[i][j] = object;
