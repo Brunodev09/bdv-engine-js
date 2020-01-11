@@ -3,8 +3,8 @@ let bdv = require("./dist/src/core/bdv").default;
 window.onload = function () {
     let test = new bdv(1024, 768);
     test.activateCanvasRendering();
-    let a = test.grid(150, 150);
-    let pixel = test.pixelDoodling(a);
+    // let a = test.grid(150, 150);
+    // let pixel = test.pixelDoodling(a);
     // let c = test.createCircle(150, 50, 50, "red");
     // let d = test.circleSpawner(a, [c]);
     // test.aStar(25, 25, 10, 12, 8, 12);

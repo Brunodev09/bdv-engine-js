@@ -125,7 +125,7 @@ export default class bdv {
         for (let x = 0; x < grid.length; x++) {
             for (let y = 0; y < grid.length; y++) {
                 if (sinWaves.isPointPartOfSinPlot(new Point(grid[x][y].props.xValue, grid[x][y].props.yValue))) {
-                    grid[x][y].color = "red";
+                    grid[x][y].color = "green";
                     grid[x][y].addProperty("isPointSin", true);
                 }
             }
@@ -232,7 +232,7 @@ export default class bdv {
         for (let i = 0; i < matrix.length; i++) {
             for (let j = 0; j < matrix[i].length; j++) {
                 if (matrix[i][j] === 0) {
-                    let object = new GameObject(Model.RECTANGLE_BORDER, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "black");
+                    let object = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "lightblue");
                     object.props["coords"] = new Point(i, j);
                     this.render.requestStage(object);
                     tracker[i][j] = object;

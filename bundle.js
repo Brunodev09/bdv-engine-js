@@ -4,8 +4,8 @@ let bdv = require("./dist/src/core/bdv").default;
 window.onload = function () {
     let test = new bdv(1024, 768);
     test.activateCanvasRendering();
-    let a = test.grid(150, 150);
-    let pixel = test.pixelDoodling(a);
+    // let a = test.grid(150, 150);
+    // let pixel = test.pixelDoodling(a);
     // let c = test.createCircle(150, 50, 50, "red");
     // let d = test.circleSpawner(a, [c]);
     // test.aStar(25, 25, 10, 12, 8, 12);
@@ -23,7 +23,7 @@ window.onload = function () {
     //     }
     // }
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-    // test.conways(100, 100, "green", "lightgreen", 100);
+    test.conways(100, 100, "green", "lightgreen", 100);
 
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
@@ -372,7 +372,7 @@ var bdv = /** @class */ (function () {
             for (var x = 0; x < grid.length; x++) {
                 for (var y = 0; y < grid.length; y++) {
                     if (sinWaves.isPointPartOfSinPlot(new Point_1.default(grid[x][y].props.xValue, grid[x][y].props.yValue))) {
-                        grid[x][y].color = "red";
+                        grid[x][y].color = "green";
                         grid[x][y].addProperty("isPointSin", true);
                     }
                 }
@@ -449,7 +449,7 @@ var bdv = /** @class */ (function () {
             for (var i = 0; i < matrix.length; i++) {
                 for (var j = 0; j < matrix[i].length; j++) {
                     if (matrix[i][j] === 0) {
-                        var object = new GameObject_1.default(Model_1.Model.RECTANGLE_BORDER, new Point_1.default(i * tileSize.width, j * tileSize.height), new Dimension_1.default(tileSize.width, tileSize.height), "black");
+                        var object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width, j * tileSize.height), new Dimension_1.default(tileSize.width, tileSize.height), "lightblue");
                         object.props["coords"] = new Point_1.default(i, j);
                         _this.render.requestStage(object);
                         tracker[i][j] = object;
