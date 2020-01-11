@@ -4,7 +4,11 @@ let bdv = require("./dist/src/core/bdv").default;
 window.onload = function () {
     let test = new bdv(1024, 768);
     test.activateCanvasRendering();
-    // let a = test.grid(150, 150);
+
+    let a = test.grid(150, 150);
+    let equation = [1, 0, 5]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
+    test.plotFunction(a, equation, "squared", [-100, 100]);
+
     // let pixel = test.pixelDoodling(a);
     // let c = test.createCircle(150, 50, 50, "red");
     // let d = test.circleSpawner(a, [c]);
@@ -23,7 +27,7 @@ window.onload = function () {
     //     }
     // }
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-    test.conways(100, 100, "green", "lightgreen", 100);
+    // test.conways(100, 100, "green", "lightgreen", 100);
 
     // test.activateImageDataRendering();
     // test.render2.pixelDoodling();
@@ -220,7 +224,7 @@ var GameObject = /** @class */ (function () {
 }());
 exports.default = GameObject;
 
-},{"../collision/CollisionManager":3,"../core/Model":7,"../math/Point":15,"../math/Vector2D":17,"./Behaviour":5}],7:[function(require,module,exports){
+},{"../collision/CollisionManager":3,"../core/Model":7,"../math/Point":16,"../math/Vector2D":18,"./Behaviour":5}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Model;
@@ -289,7 +293,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-//@TODO - Add closures to all classes
+// @TODO - Add closures to all classes
 var CanvasRenderer_1 = __importDefault(require("../render/CanvasRenderer"));
 var PixelRenderer_1 = __importDefault(require("../render/PixelRenderer"));
 var Model_1 = require("./Model");
@@ -302,6 +306,7 @@ var Conways_1 = __importDefault(require("../math/Conways"));
 var Pathfinding_1 = __importDefault(require("../math/Pathfinding"));
 var Pixel_1 = __importDefault(require("../math/Pixel"));
 var Sinwave_1 = __importDefault(require("../math/Sinwave"));
+var Plot_1 = __importDefault(require("../math/Plot"));
 var bdv = /** @class */ (function () {
     function bdv(width, height) {
         var _this = this;
@@ -449,7 +454,7 @@ var bdv = /** @class */ (function () {
             for (var i = 0; i < matrix.length; i++) {
                 for (var j = 0; j < matrix[i].length; j++) {
                     if (matrix[i][j] === 0) {
-                        var object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width, j * tileSize.height), new Dimension_1.default(tileSize.width, tileSize.height), "lightblue");
+                        var object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width, j * tileSize.height), new Dimension_1.default(tileSize.width, tileSize.height), "white");
                         object.props["coords"] = new Point_1.default(i, j);
                         _this.render.requestStage(object);
                         tracker[i][j] = object;
@@ -479,6 +484,22 @@ var bdv = /** @class */ (function () {
         }
         return grid;
     };
+    bdv.prototype.plotFunction = function (grid, equation, propertyName, xInterval) {
+        var xAxis = this.newGameObjectArray(Model_1.Model.POINTS, [[0, this.dimensions.height / 2], [this.dimensions.height / 2, this.dimensions.width]], "black");
+        this.render.requestStage(xAxis);
+        var plot = new Plot_1.default(grid, equation, propertyName, xInterval);
+        var propertyNameX = propertyName + "X";
+        var propertyNameY = propertyName + "Y";
+        grid = plot.populateGridWithFunctionValues();
+        for (var x = 0; x < grid.length; x++) {
+            for (var y = 0; y < grid.length; y++) {
+                if (plot.isPointInFunction(new Point_1.default(grid[x][y].props[propertyNameX], grid[x][y].props[propertyNameY]))) {
+                    grid[x][y].color = "red";
+                    break;
+                }
+            }
+        }
+    };
     bdv.prototype.RGB = function () {
         return { r: Math.floor(Math.random() * 255), g: Math.floor(Math.random() * 255), b: Math.floor(Math.random() * 255), a: Math.floor(Math.random() * 255) };
     };
@@ -507,7 +528,7 @@ var bdv = /** @class */ (function () {
 }());
 exports.default = bdv;
 
-},{"../../map.json":2,"../math/Circle":9,"../math/Conways":10,"../math/Dimension":11,"../math/Pathfinding":13,"../math/Pixel":14,"../math/Point":15,"../math/Sinwave":16,"../render/CanvasRenderer":18,"../render/PixelRenderer":19,"./GameObject":6,"./Model":7}],9:[function(require,module,exports){
+},{"../../map.json":2,"../math/Circle":9,"../math/Conways":10,"../math/Dimension":11,"../math/Pathfinding":13,"../math/Pixel":14,"../math/Plot":15,"../math/Point":16,"../math/Sinwave":17,"../render/CanvasRenderer":19,"../render/PixelRenderer":20,"./GameObject":6,"./Model":7}],9:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -552,7 +573,7 @@ var Circle = /** @class */ (function () {
 }());
 exports.Circle = Circle;
 
-},{"./Geometry":12,"./Point":15}],10:[function(require,module,exports){
+},{"./Geometry":12,"./Point":16}],10:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -677,7 +698,7 @@ var Conways = /** @class */ (function () {
 }());
 exports.default = Conways;
 
-},{"../core/GameObject":6,"../core/Model":7,"./Dimension":11,"./Geometry":12,"./Point":15}],11:[function(require,module,exports){
+},{"../core/GameObject":6,"../core/Model":7,"./Dimension":11,"./Geometry":12,"./Point":16}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Dimension = /** @class */ (function () {
@@ -1031,7 +1052,7 @@ var Pathfinding = /** @class */ (function () {
 }());
 exports.default = Pathfinding;
 
-},{"../core/GameObject":6,"../core/Model":7,"../utils/Sleep":21,"./Dimension":11,"./Geometry":12,"./Point":15}],14:[function(require,module,exports){
+},{"../core/GameObject":6,"../core/Model":7,"../utils/Sleep":22,"./Dimension":11,"./Geometry":12,"./Point":16}],14:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -1101,7 +1122,80 @@ var Pixel = /** @class */ (function () {
 }());
 exports.default = Pixel;
 
-},{"./Point":15}],15:[function(require,module,exports){
+},{"./Point":16}],15:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var Plot = /** @class */ (function () {
+    function Plot(grid, equation, propertyName, xInterval) {
+        this.grid = grid;
+        this.equation = equation;
+        this.propertyName = propertyName;
+        this.yInterval = [];
+        this.xInterval = xInterval;
+        this.unboxed = "";
+        this.divisionY = null;
+        this.divisionX = null;
+        this.decompressEquation();
+    }
+    Plot.prototype.isPointInFunction = function (point) {
+        var operation = eval(this.unboxed);
+        // console.log(operation, point.y, this.divisionY)
+        // If it's bigger than current point but smaller than the previous. It means our operation is aprox at this point.
+        if (operation <= point.y && operation > point.y - this.divisionY)
+            return true;
+        return false;
+    };
+    Plot.prototype.populateGridWithFunctionValues = function () {
+        this.getYInterval();
+        this.divisionX = (Math.abs(this.xInterval[0]) + Math.abs(this.xInterval[1])) / (this.grid.length - 1);
+        this.divisionY = (Math.abs(this.yInterval[0]) + Math.abs(this.yInterval[1])) / (this.grid[0].length - 1);
+        this.currentX = this.xInterval[0];
+        for (var x = 0; x < this.grid.length; x++) {
+            this.currentY = this.yInterval[0];
+            for (var y = 0; y < this.grid.length; y++) {
+                this.grid[x][y].addProperty(this.propertyName + "X", this.currentX);
+                this.grid[x][y].addProperty(this.propertyName + "Y", this.currentY);
+                this.currentY += this.divisionY;
+            }
+            this.currentX += this.divisionX;
+        }
+        return this.grid;
+    };
+    Plot.prototype.getYInterval = function () {
+        var point = { x: this.xInterval[0] };
+        var operation = eval(this.unboxed);
+        this.yInterval[0] = operation;
+        point = { x: this.xInterval[1] };
+        operation = eval(this.unboxed);
+        this.yInterval[1] = operation;
+        // this.yInterval[0] -= this.yInterval[0];
+        if (this.yInterval[0] === this.yInterval[1])
+            this.yInterval[0] -= this.yInterval[0];
+    };
+    Plot.prototype.decompressEquation = function () {
+        var counter = this.equation.length - 1;
+        for (var _i = 0, _a = this.equation; _i < _a.length; _i++) {
+            var element = _a[_i];
+            if (counter === 0) {
+                this.unboxed += " + " + element;
+                counter--;
+                break;
+            }
+            if (counter === this.equation.length - 1) {
+                this.unboxed += "(" + element + " * - 1) * Math.pow(point.x, " + counter + ")";
+                counter--;
+                continue;
+            }
+            this.unboxed += " + ((" + element + " * - 1) * Math.pow(point.x, " + counter + "))";
+            counter--;
+        }
+        console.log(this.unboxed);
+    };
+    return Plot;
+}());
+exports.default = Plot;
+
+},{}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Point = /** @class */ (function () {
@@ -1113,7 +1207,7 @@ var Point = /** @class */ (function () {
 }());
 exports.default = Point;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Sinwave = /** @class */ (function () {
@@ -1155,7 +1249,7 @@ var Sinwave = /** @class */ (function () {
 }());
 exports.default = Sinwave;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Vector2D = /** @class */ (function () {
@@ -1180,7 +1274,7 @@ var Vector2D = /** @class */ (function () {
 }());
 exports.default = Vector2D;
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -1322,7 +1416,7 @@ var bdvRender = /** @class */ (function () {
 }());
 exports.default = bdvRender;
 
-},{"../core/Model":7,"../math/Dimension":11,"../math/Point":15,"./Stage":20}],19:[function(require,module,exports){
+},{"../core/Model":7,"../math/Dimension":11,"../math/Point":16,"./Stage":21}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var ImageDataRender = /** @class */ (function () {
@@ -1391,7 +1485,7 @@ var ImageDataRender = /** @class */ (function () {
 }());
 exports.default = ImageDataRender;
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Stage = /** @class */ (function () {
@@ -1402,7 +1496,7 @@ var Stage = /** @class */ (function () {
 }());
 exports.default = Stage;
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Sleep = /** @class */ (function () {
