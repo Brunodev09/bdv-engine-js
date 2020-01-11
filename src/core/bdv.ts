@@ -119,8 +119,9 @@ export default class bdv {
     }
 
     plotFunction(grid: GameObject[][], equation: number[], propertyName: string, xInterval: [2]) {
-        let xAxis = this.newGameObjectArray(Model.POINTS, [[0, this.dimensions.height / 2], [this.dimensions.height / 2, this.dimensions.width]], "black");
-        this.render.requestStage(xAxis);
+        let xAxis = this.newGameObjectArray(Model.POINTS_BORDER, [[0, this.dimensions.height / 2], [this.dimensions.width, this.dimensions.height / 2]], "black");
+        let yAxis = this.newGameObjectArray(Model.POINTS_BORDER, [[this.dimensions.width / 2, 0], [this.dimensions.width / 2, this.dimensions.height]], "black");
+
         let plot = new Plot(grid, equation, propertyName, xInterval);
         const propertyNameX = propertyName + "X";
         const propertyNameY = propertyName + "Y";

@@ -6,7 +6,7 @@ window.onload = function () {
     test.activateCanvasRendering();
 
     let a = test.grid(150, 150);
-    let equation = [1, 0, 5]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
+    let equation = [-1, 0, 1]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
     test.plotFunction(a, equation, "squared", [-100, 100]);
 
     // let pixel = test.pixelDoodling(a);
@@ -485,8 +485,8 @@ var bdv = /** @class */ (function () {
         return grid;
     };
     bdv.prototype.plotFunction = function (grid, equation, propertyName, xInterval) {
-        var xAxis = this.newGameObjectArray(Model_1.Model.POINTS, [[0, this.dimensions.height / 2], [this.dimensions.height / 2, this.dimensions.width]], "black");
-        this.render.requestStage(xAxis);
+        var xAxis = this.newGameObjectArray(Model_1.Model.POINTS_BORDER, [[0, this.dimensions.height / 2], [this.dimensions.width, this.dimensions.height / 2]], "black");
+        var yAxis = this.newGameObjectArray(Model_1.Model.POINTS_BORDER, [[this.dimensions.width / 2, 0], [this.dimensions.width / 2, this.dimensions.height]], "black");
         var plot = new Plot_1.default(grid, equation, propertyName, xInterval);
         var propertyNameX = propertyName + "X";
         var propertyNameY = propertyName + "Y";
