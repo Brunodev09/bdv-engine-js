@@ -41,16 +41,16 @@ export default class Plot {
 
         this.divisionX = (Math.abs(this.xInterval[0]) + Math.abs(this.xInterval[1])) / (this.grid.length - 1);
         this.divisionY = (Math.abs(this.yInterval[0]) + Math.abs(this.yInterval[1])) / (this.grid[0].length - 1);
-        this.currentX = this.xInterval[0];
+        this.currentX = this.xInterval[1];
 
         for (let x = 0; x < this.grid.length; x++) {
-            this.currentY = this.yInterval[0];
+            this.currentY = this.yInterval[1];
             for (let y = 0; y < this.grid.length; y++) {
                 this.grid[x][y].addProperty(this.propertyName + "X", this.currentX);
                 this.grid[x][y].addProperty(this.propertyName + "Y", this.currentY);
-                this.currentY += this.divisionY;
+                this.currentY -= this.divisionY;
             }
-            this.currentX += this.divisionX;
+            this.currentX -= this.divisionX;
         }
         return this.grid;
     }
@@ -75,11 +75,11 @@ export default class Plot {
                 break;
             }
             if (counter === this.equation.length - 1) {
-                this.unboxed += `(${element} * - 1) * Math.pow(point.x, ${counter})`;
+                this.unboxed += `(${element} * Math.pow(point.x, ${counter}))`;
                 counter--;
                 continue;
             }
-            this.unboxed += ` + ((${element} * - 1) * Math.pow(point.x, ${counter}))`;
+            this.unboxed += ` + (${element} * Math.pow(point.x, ${counter}))`;
             counter--;
         }
         console.log(this.unboxed);
