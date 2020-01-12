@@ -16,6 +16,8 @@ I know there are tons of great frameworks out there, my actual purpose is the le
 ![](path4.gif)
 ![](con1.gif)
 ![](con2.gif)
+![](graph1.png)
+![](graph2.png)
 ![](sin.png)
 
 ## Table of Contents
