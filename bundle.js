@@ -6,7 +6,7 @@ window.onload = function () {
     test.activateCanvasRendering();
 
     let a = test.grid(150, 150);
-    let equation = [-1, 1, 1, 1]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
+    let equation = [1, 0, 12]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
     test.plotFunction(a, equation, "squared", [-100, 100]);
 
     // let pixel = test.pixelDoodling(a);
@@ -1149,15 +1149,15 @@ var Plot = /** @class */ (function () {
         this.getYInterval();
         this.divisionX = (Math.abs(this.xInterval[0]) + Math.abs(this.xInterval[1])) / (this.grid.length - 1);
         this.divisionY = (Math.abs(this.yInterval[0]) + Math.abs(this.yInterval[1])) / (this.grid[0].length - 1);
-        this.currentX = this.xInterval[0];
+        this.currentX = this.xInterval[1];
         for (var x = 0; x < this.grid.length; x++) {
-            this.currentY = this.yInterval[0];
+            this.currentY = this.yInterval[1];
             for (var y = 0; y < this.grid.length; y++) {
                 this.grid[x][y].addProperty(this.propertyName + "X", this.currentX);
                 this.grid[x][y].addProperty(this.propertyName + "Y", this.currentY);
-                this.currentY += this.divisionY;
+                this.currentY -= this.divisionY;
             }
-            this.currentX += this.divisionX;
+            this.currentX -= this.divisionX;
         }
         return this.grid;
     };
@@ -1182,11 +1182,11 @@ var Plot = /** @class */ (function () {
                 break;
             }
             if (counter === this.equation.length - 1) {
-                this.unboxed += "(" + element + " * - 1) * Math.pow(point.x, " + counter + ")";
+                this.unboxed += "(" + element + " * Math.pow(point.x, " + counter + "))";
                 counter--;
                 continue;
             }
-            this.unboxed += " + ((" + element + " * - 1) * Math.pow(point.x, " + counter + "))";
+            this.unboxed += " + (" + element + " * Math.pow(point.x, " + counter + "))";
             counter--;
         }
         console.log(this.unboxed);
