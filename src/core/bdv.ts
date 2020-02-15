@@ -1,4 +1,3 @@
-// @TODO - Load tiled map from JSON, Algos and graphs.
 // @TODO - Finish porting shape based rendering to GameObject -> Stages (Circles, arcs and fonts).
 // @TODO - Dungeon generator.
 // @TODO - Nodejs tool that reads a image file and converts it a color-mapped JSON.
@@ -6,8 +5,6 @@
 // @TODO - Collidables.
 // @TODO - Expand pixel rendering, perlin noise and mandelbrots.
 // @TODO - Easy networking.
-
-// @TODO - Add closures to all classes
 
 import bdvRender from "../render/CanvasRenderer";
 import ImageDataRender from "../render/PixelRenderer";

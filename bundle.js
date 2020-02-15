@@ -6,7 +6,7 @@ window.onload = function () {
     test.activateCanvasRendering();
 
     let a = test.grid(150, 150);
-    let equation = [1, 0, 12]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
+    let equation = [2, 0, 12]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
     test.plotFunction(a, equation, "squared", [-100, 100]);
 
     // let pixel = test.pixelDoodling(a);
@@ -245,7 +245,6 @@ var Model;
 
 },{}],8:[function(require,module,exports){
 "use strict";
-// @TODO - Load tiled map from JSON, Algos and graphs.
 // @TODO - Finish porting shape based rendering to GameObject -> Stages (Circles, arcs and fonts).
 // @TODO - Dungeon generator.
 // @TODO - Nodejs tool that reads a image file and converts it a color-mapped JSON.
@@ -293,7 +292,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// @TODO - Add closures to all classes
 var CanvasRenderer_1 = __importDefault(require("../render/CanvasRenderer"));
 var PixelRenderer_1 = __importDefault(require("../render/PixelRenderer"));
 var Model_1 = require("./Model");

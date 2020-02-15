@@ -56,6 +56,7 @@ export default class Plot {
     }
 
     getYInterval() {
+        // Point variable must be defined in order for eval to sucessfully run. Run 'eval(this.unboxed)'
         let point = {x: this.xInterval[0]};
         let operation = eval(this.unboxed);
         this.yInterval[0] = operation;
