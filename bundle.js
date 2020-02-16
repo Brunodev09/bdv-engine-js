@@ -6,7 +6,7 @@ window.onload = function () {
     test.activateCanvasRendering();
 
     let a = test.grid(150, 150);
-    let equation = [2, 0, 12]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
+    let equation = [-1, 0, 0]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
     test.plotFunction(a, equation, "squared", [-100, 100]);
 
     // let pixel = test.pixelDoodling(a);
@@ -1122,7 +1122,11 @@ exports.default = Pixel;
 
 },{"./Point":16}],15:[function(require,module,exports){
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+var Point_1 = __importDefault(require("./Point"));
 var Plot = /** @class */ (function () {
     function Plot(grid, equation, propertyName, xInterval) {
         this.grid = grid;
@@ -1160,15 +1164,31 @@ var Plot = /** @class */ (function () {
         return this.grid;
     };
     Plot.prototype.getYInterval = function () {
-        var point = { x: this.xInterval[0] };
-        var operation = eval(this.unboxed);
-        this.yInterval[0] = operation;
-        point = { x: this.xInterval[1] };
-        operation = eval(this.unboxed);
-        this.yInterval[1] = operation;
-        // this.yInterval[0] -= this.yInterval[0];
-        if (this.yInterval[0] === this.yInterval[1])
-            this.yInterval[0] -= this.yInterval[0];
+        // Point variable must be defined in order for eval to sucessfully run. Run 'eval(this.unboxed)'
+        var xLeft = this.xInterval[0], xRight = this.xInterval[1];
+        var points = xLeft;
+        var highestPoint = 0, smallestPoint = 0;
+        while (points < xRight) {
+            var _exec = this.execute(new Point_1.default(points, 0), this.unboxed);
+            if (_exec > highestPoint)
+                highestPoint = _exec;
+            else if (_exec < smallestPoint)
+                smallestPoint = _exec;
+            points++;
+        }
+        this.yInterval[0] = smallestPoint;
+        this.yInterval[1] = highestPoint;
+        // let point = {x: this.xInterval[0]};
+        // let operation = eval(this.unboxed);
+        // this.yInterval[0] = operation;
+        // point = {x: this.xInterval[1]};
+        // operation = eval(this.unboxed);
+        // this.yInterval[1] = operation;
+        // // this.yInterval[0] -= this.yInterval[0];
+        // if (this.yInterval[0] === this.yInterval[1]) this.yInterval[0] -= this.yInterval[0];
+    };
+    Plot.prototype.execute = function (point, expression) {
+        return eval(expression);
     };
     Plot.prototype.decompressEquation = function () {
         var counter = this.equation.length - 1;
@@ -1193,7 +1213,7 @@ var Plot = /** @class */ (function () {
 }());
 exports.default = Plot;
 
-},{}],16:[function(require,module,exports){
+},{"./Point":16}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Point = /** @class */ (function () {

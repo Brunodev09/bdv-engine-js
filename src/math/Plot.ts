@@ -57,14 +57,21 @@ export default class Plot {
 
     getYInterval() {
         // Point variable must be defined in order for eval to sucessfully run. Run 'eval(this.unboxed)'
-        let point = {x: this.xInterval[0]};
-        let operation = eval(this.unboxed);
-        this.yInterval[0] = operation;
-        point = {x: this.xInterval[1]};
-        operation = eval(this.unboxed);
-        this.yInterval[1] = operation;
-        // this.yInterval[0] -= this.yInterval[0];
-        if (this.yInterval[0] === this.yInterval[1]) this.yInterval[0] -= this.yInterval[0];
+        const xLeft = this.xInterval[0], xRight = this.xInterval[1];
+        let points = xLeft;
+        let highestPoint = 0, smallestPoint = 0;
+        while (points < xRight) {
+            const _exec = this.execute(new Point(points, 0), this.unboxed);
+            if (_exec > highestPoint) highestPoint = _exec;
+            else if (_exec < smallestPoint) smallestPoint = _exec;
+            points++;
+        }
+        this.yInterval[0] = smallestPoint;
+        this.yInterval[1] = highestPoint;
+    }
+
+    private execute(point: Point, expression: string) {
+        return eval(expression);
     }
 
     decompressEquation() {
