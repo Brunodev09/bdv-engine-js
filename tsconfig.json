@@ -17,7 +17,7 @@
     "reflect-metadata"
   ],
   "include": [
-    "./**/*.ts"
+    "./**/*.ts", "src/index.js"
   ],
   "exclude": [
     "node_modules"

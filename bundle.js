@@ -1,12 +1,12 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-let bdv = require("./dist/src/core/bdv").default;
-
+let Core = require("./dist/src/core/bdv").bdv;
 window.onload = function () {
-    let test = new bdv(1024, 768);
+
+    let test = new Core(1024, 768);
     test.activateCanvasRendering();
 
     let a = test.grid(150, 150);
-    let equation = [-1, 0, 0]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
+    let equation = [1, 0, 0]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
     test.plotFunction(a, equation, "squared", [-100, 100]);
 
     // let pixel = test.pixelDoodling(a);
@@ -524,7 +524,7 @@ var bdv = /** @class */ (function () {
     };
     return bdv;
 }());
-exports.default = bdv;
+exports.bdv = bdv;
 
 },{"../../map.json":2,"../math/Circle":9,"../math/Conways":10,"../math/Dimension":11,"../math/Pathfinding":13,"../math/Pixel":14,"../math/Plot":15,"../math/Point":16,"../math/Sinwave":17,"../render/CanvasRenderer":19,"../render/PixelRenderer":20,"./GameObject":6,"./Model":7}],9:[function(require,module,exports){
 "use strict";
@@ -1178,14 +1178,6 @@ var Plot = /** @class */ (function () {
         }
         this.yInterval[0] = smallestPoint;
         this.yInterval[1] = highestPoint;
-        // let point = {x: this.xInterval[0]};
-        // let operation = eval(this.unboxed);
-        // this.yInterval[0] = operation;
-        // point = {x: this.xInterval[1]};
-        // operation = eval(this.unboxed);
-        // this.yInterval[1] = operation;
-        // // this.yInterval[0] -= this.yInterval[0];
-        // if (this.yInterval[0] === this.yInterval[1]) this.yInterval[0] -= this.yInterval[0];
     };
     Plot.prototype.execute = function (point, expression) {
         return eval(expression);
