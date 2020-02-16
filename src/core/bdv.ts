@@ -22,7 +22,7 @@ import Pixel from "../math/Pixel";
 import Sinwave from "../math/Sinwave";
 import Plot from "../math/Plot";
 
-export default class bdv {
+export class bdv {
     canvasId: string;
     dimensions: Dimension;
     render: null | bdvRender;
