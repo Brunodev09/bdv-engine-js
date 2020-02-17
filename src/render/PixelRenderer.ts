@@ -1,4 +1,8 @@
 import Dimension from "../math/Dimension";
+import GameObject from "../core/GameObject";
+import Stage from "../render/Stage";
+import { Model } from "../core/Model";
+import Geometry from "../math/Geometry";
 
 export default class ImageDataRender {
     dimensions: Dimension;
@@ -7,11 +11,16 @@ export default class ImageDataRender {
     imageData: ImageData;
     pixelArray: Uint8ClampedArray;
     pixels: Uint8ClampedArray[];
+    stage: Stage;
+    pixelsMatrix: Uint8ClampedArray[][];
     constructor(canvasId: string, dimensions: Dimension) {
         this.dimensions = dimensions;
         this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
         this.ctx = this.canvas.getContext("2d");
         this.pixels = [];
+        this.pixelsMatrix = Geometry.createMatrix(dimensions);
+        this.stage = new Stage();
+        this.start();
     }
 
     start = () => {
@@ -25,6 +34,65 @@ export default class ImageDataRender {
                 continue;
             }
             counter++;
+        }
+        let inner = 0;
+        let resCounter = 0;
+        for (let i = 0; i < this.pixels.length; i++) {
+            if (resCounter < this.dimensions.width) {
+                this.pixelsMatrix[resCounter][inner] = this.pixels[i];
+            }
+            else {
+                inner++;
+                resCounter = 0;
+                continue;
+            }
+            resCounter++;
+        }
+    }
+
+    requestStage(object: GameObject) {  
+        this.stage.queue.push(object);
+        return this.stage.queue.length - 1;
+    }
+
+    removeFromStage(index: number): boolean {
+        if (!this.stage.queue[index]) return false;
+        this.stage.queue.splice(index, 1);
+        return true;
+    }
+
+    clearStage() {
+        this.stage.queue = [];
+    }
+
+    loop = () => {
+        requestAnimationFrame(this.animation);
+    }
+
+    animation = () => {
+        this.createPixelsScreen();
+        this.stageRenderingOrder();
+        requestAnimationFrame(this.animation);
+    }
+
+    stageRenderingOrder = () => {
+        for (let object of this.stage.queue) {
+            switch (object.model) {
+                case Model.RECTANGLE:
+                    break;
+                case Model.RECTANGLE_BORDER:
+                    break;
+                case Model.POINTS:
+                case Model.POINTS_BORDER:
+                case Model.VECTOR:    
+                    break;
+                case Model.CIRCLE:
+                    break;
+                case Model.CIRCLE_BORDER:
+                    break;
+                case Model.PIXEL_FREE:
+                    break;    
+            }
         }
     }
 
@@ -55,6 +123,11 @@ export default class ImageDataRender {
         for (let i = 0; i < rgb.length; i++) {
             this.imageData.data[innerIndex] = rgb[i];
             innerIndex--;
+        }
+    }
+
+    rect = (width: number, height: number, pos: number, color: string) => {
+        for (let i = 0; i < this.imageData.data.length / 4; i++) {
         }
     }
 

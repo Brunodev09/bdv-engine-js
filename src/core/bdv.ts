@@ -6,6 +6,9 @@
 // @TODO - Expand pixel rendering, perlin noise and mandelbrots.
 // @TODO - Easy networking.
 
+// @TODO - Separate examples (conways, aStar etc from native functions of the engine to a 'samples' js folder teaching how to use the engine to build those).
+// @TODO - Finish the pixel renderer. 
+
 import bdvRender from "../render/CanvasRenderer";
 import ImageDataRender from "../render/PixelRenderer";
 import Stage from "../render/Stage";
@@ -49,7 +52,12 @@ export class bdv {
 
     activateImageDataRendering = () => {
         this.render2 = new ImageDataRender(this.canvasId, this.dimensions);
-        this.render2.start();
+        this.game2();
+    }
+
+    game2 = () => {
+        this.render2.loop();
+        this.render2.createPixelsScreen();
     }
 
     game = () => {
