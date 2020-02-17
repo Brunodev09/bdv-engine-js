@@ -3,6 +3,8 @@ import GameObject from "../core/GameObject";
 import Stage from "../render/Stage";
 import { Model } from "../core/Model";
 import Geometry from "../math/Geometry";
+import Point from "../math/Point";
+import RGB from "../math/RGB";
 
 export default class ImageDataRender {
     dimensions: Dimension;
@@ -12,7 +14,7 @@ export default class ImageDataRender {
     pixelArray: Uint8ClampedArray;
     pixels: Uint8ClampedArray[];
     stage: Stage;
-    pixelsMatrix: Uint8ClampedArray[][];
+    pixelsMatrix: Uint8ClampedArray[][] | number[][];
     constructor(canvasId: string, dimensions: Dimension) {
         this.dimensions = dimensions;
         this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
@@ -79,6 +81,7 @@ export default class ImageDataRender {
         for (let object of this.stage.queue) {
             switch (object.model) {
                 case Model.RECTANGLE:
+                    this.rect(object);
                     break;
                 case Model.RECTANGLE_BORDER:
                     break;
@@ -124,10 +127,32 @@ export default class ImageDataRender {
             this.imageData.data[innerIndex] = rgb[i];
             innerIndex--;
         }
+        return true;
     }
 
-    rect = (width: number, height: number, pos: number, color: string) => {
-        for (let i = 0; i < this.imageData.data.length / 4; i++) {
+    getPixelFromMatrix = (point: Point) => {
+        try {
+            return this.pixelsMatrix[point.x][point.y];
+        } catch(e) {
+            console.error(`No such pixel ${point.x}, ${point.y}.`);
+        }
+    }
+
+    paint = (point: Point, color: RGB) => {
+        const { x, y } = point;
+        const { r, g, b, a } = color;
+        return this.setPixel(((y + 1) * this.dimensions.width) + x, [r, g, b, a]);
+    }
+
+    rect = (object: GameObject) => {
+        const  { dimension, position, rgb } = object;
+        if (!rgb) throw new Error("Please specify the rgb property on this GameObject to be able to render through PixelRenderer.");
+        for (let i = 0; i < this.pixelsMatrix.length; i++) {
+            for (let j = 0; j < this.pixelsMatrix[i].length; j++) {
+                if ((i - (position as Point).x <= 0 && (i - (position as Point).x) <= dimension.width) && (j - (position as Point).y <= 0 && (j - (position as Point).y) <= dimension.height)) {
+                    this.paint(new Point(i, j), object.rgb);
+                }
+            }
         }
     }
 

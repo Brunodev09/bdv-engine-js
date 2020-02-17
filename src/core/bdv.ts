@@ -16,6 +16,7 @@ import { Model } from "./Model";
 import GameObject from "./GameObject";
 import Dimension from "../math/Dimension";
 import Point from "../math/Point";
+import RGB from "../math/RGB";
 import { Circle, CircleSpawner } from "../math/Circle";
 
 import mapFile from "../../map.json";
@@ -65,9 +66,20 @@ export class bdv {
         this.render.clear();
     }
 
-    newGameObject = (model: string, positionX: number, positionY: number, width: number, height: number, color: string, font?: string, message?: string): GameObject => {
-        let object = new GameObject(Model[model], new Point(positionX, positionY), new Dimension(width, height), color, font, message);
-        this.render.requestStage(object);
+    newGameObject = (model: string, positionX: number, positionY: number, width: number, height: number, color: string, font?: string, message?: string, rgb?: number[], renderOption?: number): GameObject => {
+        let object = new GameObject(Model[model], new Point(positionX, positionY), new Dimension(width, height), color, font, message, { r: rgb[0], g: rgb[1], b: rgb[2], a: rgb[3] });
+
+        switch(renderOption) {
+            case 1:
+                this.render.requestStage(object);
+                break;
+            case 2:
+                this.render2.requestStage(object);
+                break;
+            default:
+                this.render ? this.render.requestStage(object) : this.render2.requestStage(object);
+                break;
+        }
 
         return object;
     }

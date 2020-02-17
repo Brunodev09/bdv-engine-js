@@ -6,6 +6,7 @@ import Vector2D from "../math/Vector2D";
 
 import { Behaviour } from "./Behaviour";
 import CollisionManager from "../collision/CollisionManager";
+import RGB from "../math/RGB";
 
 let _id = 0;
 
@@ -14,6 +15,7 @@ export default class GameObject {
     position: Point | Point[];
     dimension: Dimension;
     color: string;
+    rgb: RGB;
     middle: Point;
 
     player?: boolean;
@@ -27,14 +29,15 @@ export default class GameObject {
     props?: any;
     id?: number;
 
-    constructor(model: Model, position: Point | Point[], dimension: Dimension, color?: string, font?: string, message?: string) {
+    constructor(model: Model, position: Point | Point[], dimension: Dimension, color?: string, font?: string, message?: string, rgb?: RGB) {
         _id++;
         this.id = _id;
-        if (!color) color = "black"
+        if (!color) color = "black";
         this.model = model;
         this.position = position;
         this.dimension = dimension;
         this.color = color;
+        this.rgb = rgb;
 
         this.font = font;
         this.message = message;
