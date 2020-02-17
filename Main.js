@@ -1,5 +1,5 @@
 window.onload = function () {
-    
+
     let Core = require("./dist/src/core/bdv").bdv;
     let test = new Core(1024, 768);
     // test.activateCanvasRendering();
@@ -29,6 +29,7 @@ window.onload = function () {
     // test.conways(100, 100, "green", "lightgreen", 100);
 
     test.activateImageDataRendering();
+    test.newGameObject("RECTANGLE", 100, 100, 100, 100, "BLACK", null, null, [0, 0, 0, 0], 2);
     // test.render2.pixelDoodling();
 
     // let movingSquare = test.drawingVectors();

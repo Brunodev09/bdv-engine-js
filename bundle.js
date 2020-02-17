@@ -1,6 +1,6 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.onload = function () {
-    
+
     let Core = require("./dist/src/core/bdv").bdv;
     let test = new Core(1024, 768);
     // test.activateCanvasRendering();
@@ -30,6 +30,7 @@ window.onload = function () {
     // test.conways(100, 100, "green", "lightgreen", 100);
 
     test.activateImageDataRendering();
+    test.newGameObject("RECTANGLE", 100, 100, 100, 100, "BLACK", null, null, [0, 0, 0, 0], 2);
     // test.render2.pixelDoodling();
 
     // let movingSquare = test.drawingVectors();
@@ -130,7 +131,7 @@ var Behaviour_1 = require("./Behaviour");
 var CollisionManager_1 = __importDefault(require("../collision/CollisionManager"));
 var _id = 0;
 var GameObject = /** @class */ (function () {
-    function GameObject(model, position, dimension, color, font, message) {
+    function GameObject(model, position, dimension, color, font, message, rgb) {
         var _this = this;
         this.addProperty = function (propName, propValue) {
             _this.props[propName] = propValue;
@@ -143,6 +144,7 @@ var GameObject = /** @class */ (function () {
         this.position = position;
         this.dimension = dimension;
         this.color = color;
+        this.rgb = rgb;
         this.font = font;
         this.message = message;
         this.props = {};
@@ -327,9 +329,19 @@ var bdv = /** @class */ (function () {
             _this.render.loop();
             _this.render.clear();
         };
-        this.newGameObject = function (model, positionX, positionY, width, height, color, font, message) {
-            var object = new GameObject_1.default(Model_1.Model[model], new Point_1.default(positionX, positionY), new Dimension_1.default(width, height), color, font, message);
-            _this.render.requestStage(object);
+        this.newGameObject = function (model, positionX, positionY, width, height, color, font, message, rgb, renderOption) {
+            var object = new GameObject_1.default(Model_1.Model[model], new Point_1.default(positionX, positionY), new Dimension_1.default(width, height), color, font, message, { r: rgb[0], g: rgb[1], b: rgb[2], a: rgb[3] });
+            switch (renderOption) {
+                case 1:
+                    _this.render.requestStage(object);
+                    break;
+                case 2:
+                    _this.render2.requestStage(object);
+                    break;
+                default:
+                    _this.render ? _this.render.requestStage(object) : _this.render2.requestStage(object);
+                    break;
+            }
             return object;
         };
         this.newGameObjectArray = function (model, positions, color, font, message) {
@@ -1442,6 +1454,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Stage_1 = __importDefault(require("../render/Stage"));
 var Model_1 = require("../core/Model");
 var Geometry_1 = __importDefault(require("../math/Geometry"));
+var Point_1 = __importDefault(require("../math/Point"));
 var ImageDataRender = /** @class */ (function () {
     function ImageDataRender(canvasId, dimensions) {
         var _this = this;
@@ -1470,7 +1483,6 @@ var ImageDataRender = /** @class */ (function () {
                 }
                 resCounter++;
             }
-            console.log(_this.pixelsMatrix);
         };
         this.loop = function () {
             requestAnimationFrame(_this.animation);
@@ -1485,6 +1497,7 @@ var ImageDataRender = /** @class */ (function () {
                 var object = _a[_i];
                 switch (object.model) {
                     case Model_1.Model.RECTANGLE:
+                        _this.rect(object);
                         break;
                     case Model_1.Model.RECTANGLE_BORDER:
                         break;
@@ -1527,9 +1540,31 @@ var ImageDataRender = /** @class */ (function () {
                 _this.imageData.data[innerIndex] = rgb[i];
                 innerIndex--;
             }
+            return true;
         };
-        this.rect = function (width, height, pos, color) {
-            for (var i = 0; i < _this.imageData.data.length / 4; i++) {
+        this.getPixelFromMatrix = function (point) {
+            try {
+                return _this.pixelsMatrix[point.x][point.y];
+            }
+            catch (e) {
+                console.error("No such pixel " + point.x + ", " + point.y + ".");
+            }
+        };
+        this.paint = function (point, color) {
+            var x = point.x, y = point.y;
+            var r = color.r, g = color.g, b = color.b, a = color.a;
+            return _this.setPixel(((y + 1) * _this.dimensions.width) + x, [r, g, b, a]);
+        };
+        this.rect = function (object) {
+            var dimension = object.dimension, position = object.position, rgb = object.rgb;
+            if (!rgb)
+                throw new Error("Please specify the rgb property on this GameObject to be able to render through PixelRenderer.");
+            for (var i = 0; i < _this.pixelsMatrix.length; i++) {
+                for (var j = 0; j < _this.pixelsMatrix[i].length; j++) {
+                    if ((i - position.x <= 0 && (i - position.x) <= dimension.width) && (j - position.y <= 0 && (j - position.y) <= dimension.height)) {
+                        _this.paint(new Point_1.default(i, j), object.rgb);
+                    }
+                }
             }
         };
         this.pixelDoodling = function () {
@@ -1571,7 +1606,7 @@ var ImageDataRender = /** @class */ (function () {
 }());
 exports.default = ImageDataRender;
 
-},{"../core/Model":7,"../math/Geometry":12,"../render/Stage":21}],21:[function(require,module,exports){
+},{"../core/Model":7,"../math/Geometry":12,"../math/Point":16,"../render/Stage":21}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Stage = /** @class */ (function () {
