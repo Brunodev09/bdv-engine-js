@@ -1,13 +1,13 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-let Core = require("./dist/src/core/bdv").bdv;
 window.onload = function () {
-
+    
+    let Core = require("./dist/src/core/bdv").bdv;
     let test = new Core(1024, 768);
-    test.activateCanvasRendering();
+    // test.activateCanvasRendering();
 
-    let a = test.grid(150, 150);
-    let equation = [1, 0, 0]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
-    test.plotFunction(a, equation, "squared", [-100, 100]);
+    // let a = test.grid(150, 150);
+    // let equation = [1, 0, 0]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
+    // test.plotFunction(a, equation, "squared", [-100, 100]);
 
     // let pixel = test.pixelDoodling(a);
     // let c = test.createCircle(150, 50, 50, "red");
@@ -29,7 +29,7 @@ window.onload = function () {
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
     // test.conways(100, 100, "green", "lightgreen", 100);
 
-    // test.activateImageDataRendering();
+    test.activateImageDataRendering();
     // test.render2.pixelDoodling();
 
     // let movingSquare = test.drawingVectors();
@@ -241,6 +241,7 @@ var Model;
     Model["CIRCLE_BORDER"] = "CIRCLE_BORDER";
     Model["ARC"] = "ARC";
     Model["VECTOR"] = "VECTOR";
+    Model["PIXEL_FREE"] = "PIXEL_FREE";
 })(Model = exports.Model || (exports.Model = {}));
 
 },{}],8:[function(require,module,exports){
@@ -292,6 +293,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// @TODO - Separate examples (conways, aStar etc from native functions of the engine to a 'samples' js folder teaching how to use the engine to build those).
+// @TODO - Finish the pixel renderer. 
 var CanvasRenderer_1 = __importDefault(require("../render/CanvasRenderer"));
 var PixelRenderer_1 = __importDefault(require("../render/PixelRenderer"));
 var Model_1 = require("./Model");
@@ -314,7 +317,11 @@ var bdv = /** @class */ (function () {
         };
         this.activateImageDataRendering = function () {
             _this.render2 = new PixelRenderer_1.default(_this.canvasId, _this.dimensions);
-            _this.render2.start();
+            _this.game2();
+        };
+        this.game2 = function () {
+            _this.render2.loop();
+            _this.render2.createPixelsScreen();
         };
         this.game = function () {
             _this.render.loop();
@@ -1428,7 +1435,13 @@ exports.default = bdvRender;
 
 },{"../core/Model":7,"../math/Dimension":11,"../math/Point":16,"./Stage":21}],20:[function(require,module,exports){
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+var Stage_1 = __importDefault(require("../render/Stage"));
+var Model_1 = require("../core/Model");
+var Geometry_1 = __importDefault(require("../math/Geometry"));
 var ImageDataRender = /** @class */ (function () {
     function ImageDataRender(canvasId, dimensions) {
         var _this = this;
@@ -1443,6 +1456,49 @@ var ImageDataRender = /** @class */ (function () {
                     continue;
                 }
                 counter++;
+            }
+            var inner = 0;
+            var resCounter = 0;
+            for (var i = 0; i < _this.pixels.length; i++) {
+                if (resCounter < _this.dimensions.width) {
+                    _this.pixelsMatrix[resCounter][inner] = _this.pixels[i];
+                }
+                else {
+                    inner++;
+                    resCounter = 0;
+                    continue;
+                }
+                resCounter++;
+            }
+            console.log(_this.pixelsMatrix);
+        };
+        this.loop = function () {
+            requestAnimationFrame(_this.animation);
+        };
+        this.animation = function () {
+            _this.createPixelsScreen();
+            _this.stageRenderingOrder();
+            requestAnimationFrame(_this.animation);
+        };
+        this.stageRenderingOrder = function () {
+            for (var _i = 0, _a = _this.stage.queue; _i < _a.length; _i++) {
+                var object = _a[_i];
+                switch (object.model) {
+                    case Model_1.Model.RECTANGLE:
+                        break;
+                    case Model_1.Model.RECTANGLE_BORDER:
+                        break;
+                    case Model_1.Model.POINTS:
+                    case Model_1.Model.POINTS_BORDER:
+                    case Model_1.Model.VECTOR:
+                        break;
+                    case Model_1.Model.CIRCLE:
+                        break;
+                    case Model_1.Model.CIRCLE_BORDER:
+                        break;
+                    case Model_1.Model.PIXEL_FREE:
+                        break;
+                }
             }
         };
         this.getRandomRGBValue = function () {
@@ -1472,6 +1528,10 @@ var ImageDataRender = /** @class */ (function () {
                 innerIndex--;
             }
         };
+        this.rect = function (width, height, pos, color) {
+            for (var i = 0; i < _this.imageData.data.length / 4; i++) {
+            }
+        };
         this.pixelDoodling = function () {
             setInterval(function () {
                 _this.imageData = _this.ctx.createImageData(_this.dimensions.width, _this.dimensions.height);
@@ -1490,12 +1550,28 @@ var ImageDataRender = /** @class */ (function () {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext("2d");
         this.pixels = [];
+        this.pixelsMatrix = Geometry_1.default.createMatrix(dimensions);
+        this.stage = new Stage_1.default();
+        this.start();
     }
+    ImageDataRender.prototype.requestStage = function (object) {
+        this.stage.queue.push(object);
+        return this.stage.queue.length - 1;
+    };
+    ImageDataRender.prototype.removeFromStage = function (index) {
+        if (!this.stage.queue[index])
+            return false;
+        this.stage.queue.splice(index, 1);
+        return true;
+    };
+    ImageDataRender.prototype.clearStage = function () {
+        this.stage.queue = [];
+    };
     return ImageDataRender;
 }());
 exports.default = ImageDataRender;
 
-},{}],21:[function(require,module,exports){
+},{"../core/Model":7,"../math/Geometry":12,"../render/Stage":21}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Stage = /** @class */ (function () {

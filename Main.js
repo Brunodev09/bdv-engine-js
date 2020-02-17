@@ -1,12 +1,12 @@
-let Core = require("./dist/src/core/bdv").bdv;
 window.onload = function () {
-
+    
+    let Core = require("./dist/src/core/bdv").bdv;
     let test = new Core(1024, 768);
-    test.activateCanvasRendering();
+    // test.activateCanvasRendering();
 
-    let a = test.grid(150, 150);
-    let equation = [1, 0, 0]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
-    test.plotFunction(a, equation, "squared", [-100, 100]);
+    // let a = test.grid(150, 150);
+    // let equation = [1, 0, 0]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
+    // test.plotFunction(a, equation, "squared", [-100, 100]);
 
     // let pixel = test.pixelDoodling(a);
     // let c = test.createCircle(150, 50, 50, "red");
@@ -28,7 +28,7 @@ window.onload = function () {
     // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
     // test.conways(100, 100, "green", "lightgreen", 100);
 
-    // test.activateImageDataRendering();
+    test.activateImageDataRendering();
     // test.render2.pixelDoodling();
 
     // let movingSquare = test.drawingVectors();
