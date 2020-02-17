@@ -30,7 +30,7 @@ window.onload = function () {
     // test.conways(100, 100, "green", "lightgreen", 100);
 
     test.activateImageDataRendering();
-    test.newGameObject("RECTANGLE", 100, 100, 100, 100, "BLACK", null, null, [0, 0, 0, 0], 2);
+    test.newGameObject("RECTANGLE", 100, 100, 100, 100, "BLACK", null, null, [0, 0, 0, 1], 2);
     // test.render2.pixelDoodling();
 
     // let movingSquare = test.drawingVectors();
@@ -1552,6 +1552,7 @@ var ImageDataRender = /** @class */ (function () {
         };
         this.paint = function (point, color) {
             var x = point.x, y = point.y;
+            console.log(x, y, "poi");
             var r = color.r, g = color.g, b = color.b, a = color.a;
             return _this.setPixel(((y + 1) * _this.dimensions.width) + x, [r, g, b, a]);
         };

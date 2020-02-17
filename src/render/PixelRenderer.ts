@@ -140,6 +140,7 @@ export default class ImageDataRender {
 
     paint = (point: Point, color: RGB) => {
         const { x, y } = point;
+        console.log(x, y, "poi")
         const { r, g, b, a } = color;
         return this.setPixel(((y + 1) * this.dimensions.width) + x, [r, g, b, a]);
     }
