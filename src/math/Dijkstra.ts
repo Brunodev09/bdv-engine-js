@@ -5,7 +5,7 @@ class Node {
     constructor(id: number, len: number) {
         this.id = id;
         this.distances = new Array(len);
-        this.neighbours = [];
+        this.neighbours = new Array(len);
     }
 
     populateNeighbours(graph: number[]) {
@@ -23,9 +23,9 @@ export default class Dijkstra {
     graph: number[][];
     sptSet: number[];
     visited: number[];
-    unvisited: number[];
-    src: number;
+    unvisited: Node[];
     nodes: Node[];
+    src: number;
     constructor(graph: number[][], src: number) {
         this.graph = graph;
         this.src = src;
@@ -37,16 +37,35 @@ export default class Dijkstra {
 
         // Filling the unvisited array with all the nodes from the graph.
         for (let i = 0; i < graph.length; i++) {
-            this.unvisited[i] = i;
             this.nodes.push(new Node(i, graph.length));
             this.nodes[this.nodes.length - 1].populateNeighbours(graph[i]);
+            this.unvisited.push(this.nodes[this.nodes.length - 1]);
         }
-        console.log(this.nodes);
-        // let startVertex = this.nodes[src];
-        // startVertex.distances[src] = 0;
+
+        let startVertex = this.nodes[src];
+        let it1 = 0;
+        for (let node of this.nodes) {
+            if (it1 === startVertex.id) this.nodes[src].distances[src] = 0;
+            else this.nodes[it1].distances[src] = Infinity;
+            it1++;
+        }
+        
+        this.applyDijkstra(this.unvisited, startVertex);
 
 
+    }
 
+    applyDijkstra(unvisitedVertexes: Node[], startVertex: Node) {
+        let smallestKnownDistance = Infinity;
+        let currentNeighboursToVisit = [];
+        for (let vertex of unvisitedVertexes) {
+            if (vertex.distances[startVertex.id] < smallestKnownDistance) smallestKnownDistance = vertex.distances[startVertex.id];
+            for (let vertex2 in vertex.neighbours) {
+                if (vertex.neighbours[vertex2] !== null && unvisitedVertexes[vertex2] !== null) currentNeighboursToVisit.push(unvisitedVertexes[vertex2]);
+            }
+        }
+        
+        console.log(smallestKnownDistance, currentNeighboursToVisit);
     }
 }
 // src -> 0
