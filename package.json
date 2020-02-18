@@ -4,11 +4,7 @@
   "description": "A game engine.",
   "main": "bdv.js",
   "scripts": {
-<<<<<<< HEAD
-    "start": "tsc && browserify Main.js -o bundle.js",
-=======
     "start": "tsc && browserify Main.js -o bundle.js && google-chrome test.html",
->>>>>>> b26baa3295ef11f38955a978e87a3ac0c4744090
     "open": "google-chrome test.html"
   },
   "repository": {
