@@ -52,7 +52,7 @@ export default class ImageDataRender {
         }
     }
 
-    requestStage(object: GameObject) {  
+    requestStage(object: GameObject) {
         this.stage.queue.push(object);
         return this.stage.queue.length - 1;
     }
@@ -74,6 +74,8 @@ export default class ImageDataRender {
     animation = () => {
         this.createPixelsScreen();
         this.stageRenderingOrder();
+
+        this.ctx.putImageData(this.imageData, 0, 0);
         requestAnimationFrame(this.animation);
     }
 

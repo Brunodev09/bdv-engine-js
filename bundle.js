@@ -29,7 +29,7 @@ window.onload = function () {
     // test.conways(100, 100, "green", "lightgreen", 100);
 
     test.activateImageDataRendering();
-    test.newGameObject("RECTANGLE", 100, 100, 100, 100, "BLACK", null, null, [0, 0, 0, 1], 2);
+    test.newGameObject("RECTANGLE", 500, 500, 100, 100, "BLACK", null, null, [255, 255, 255, 1], 2);
     // test.render2.pixelDoodling();
 
     // let movingSquare = test.drawingVectors();
@@ -1489,6 +1489,7 @@ var ImageDataRender = /** @class */ (function () {
         this.animation = function () {
             _this.createPixelsScreen();
             _this.stageRenderingOrder();
+            _this.ctx.putImageData(_this.imageData, 0, 0);
             requestAnimationFrame(_this.animation);
         };
         this.stageRenderingOrder = function () {
