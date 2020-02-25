@@ -44,11 +44,11 @@ export default class ImageDataRender {
                 this.pixelsMatrix[resCounter][inner] = this.pixels[i];
             }
             else {
-                inner++;
-                resCounter = 0;
+                resCounter++;
+                inner = 0;
                 continue;
             }
-            resCounter++;
+            inner++;
         }
     }
 
@@ -151,7 +151,7 @@ export default class ImageDataRender {
         if (!rgb) throw new Error("Please specify the rgb property on this GameObject to be able to render through PixelRenderer.");
         for (let i = 0; i < this.pixelsMatrix.length; i++) {
             for (let j = 0; j < this.pixelsMatrix[i].length; j++) {
-                if ((i - (position as Point).x <= 0 && (i - (position as Point).x) <= dimension.width) && (j - (position as Point).y <= 0 && (j - (position as Point).y) <= dimension.height)) {
+                if ((i - (position as Point).x > 0 && (i - (position as Point).x) < dimension.width) && (j - (position as Point).y > 0 && (j - (position as Point).y) < dimension.height)) {
                     this.paint(new Point(i, j), object.rgb);
                 }
             }
