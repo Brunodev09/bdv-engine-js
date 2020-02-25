@@ -29,7 +29,7 @@ window.onload = function () {
     // test.conways(100, 100, "green", "lightgreen", 100);
 
     test.activateImageDataRendering();
-    test.newGameObject("RECTANGLE", 500, 500, 100, 100, "BLACK", null, null, [255, 255, 255, 1], 2);
+    test.newGameObject("RECTANGLE", 0, 0, 100, 100, "BLACK", null, null, [0, 255, 0, 0], 2);
     // test.render2.pixelDoodling();
 
     // let movingSquare = test.drawingVectors();
@@ -1476,11 +1476,11 @@ var ImageDataRender = /** @class */ (function () {
                     _this.pixelsMatrix[resCounter][inner] = _this.pixels[i];
                 }
                 else {
-                    inner++;
-                    resCounter = 0;
+                    resCounter++;
+                    inner = 0;
                     continue;
                 }
-                resCounter++;
+                inner++;
             }
         };
         this.loop = function () {
@@ -1561,7 +1561,7 @@ var ImageDataRender = /** @class */ (function () {
                 throw new Error("Please specify the rgb property on this GameObject to be able to render through PixelRenderer.");
             for (var i = 0; i < _this.pixelsMatrix.length; i++) {
                 for (var j = 0; j < _this.pixelsMatrix[i].length; j++) {
-                    if ((i - position.x <= 0 && (i - position.x) <= dimension.width) && (j - position.y <= 0 && (j - position.y) <= dimension.height)) {
+                    if ((i - position.x > 0 && (i - position.x) < dimension.width) && (j - position.y > 0 && (j - position.y) < dimension.height)) {
                         _this.paint(new Point_1.default(i, j), object.rgb);
                     }
                 }
