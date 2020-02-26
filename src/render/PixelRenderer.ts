@@ -14,7 +14,7 @@ export default class ImageDataRender {
     pixelArray: Uint8ClampedArray;
     pixels: Uint8ClampedArray[];
     stage: Stage;
-    pixelsMatrix: Uint8ClampedArray[][] | number[][];
+    pixelsMatrix: Uint8ClampedArray[][] | number[][][];
     constructor(canvasId: string, dimensions: Dimension) {
         this.dimensions = dimensions;
         this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
@@ -40,8 +40,8 @@ export default class ImageDataRender {
         let inner = 0;
         let resCounter = 0;
         for (let i = 0; i < this.pixels.length; i++) {
-            if (resCounter < this.dimensions.width) {
-                this.pixelsMatrix[resCounter][inner] = this.pixels[i];
+            if (inner < this.dimensions.height) {
+                (this.pixelsMatrix[resCounter][inner] as any) = this.pixels[i];
             }
             else {
                 resCounter++;
@@ -74,10 +74,11 @@ export default class ImageDataRender {
     animation = () => {
         this.createPixelsScreen();
         this.stageRenderingOrder();
-
+        
         this.ctx.putImageData(this.imageData, 0, 0);
         requestAnimationFrame(this.animation);
     }
+
 
     stageRenderingOrder = () => {
         for (let object of this.stage.queue) {
@@ -89,14 +90,14 @@ export default class ImageDataRender {
                     break;
                 case Model.POINTS:
                 case Model.POINTS_BORDER:
-                case Model.VECTOR:    
+                case Model.VECTOR:
                     break;
                 case Model.CIRCLE:
                     break;
                 case Model.CIRCLE_BORDER:
                     break;
                 case Model.PIXEL_FREE:
-                    break;    
+                    break;
             }
         }
     }
@@ -106,11 +107,11 @@ export default class ImageDataRender {
     }
 
     createPixelsScreen = () => {
-        for (let i = 0; i < this.imageData.data.length; i++) {
-            let [r] = this.getRandomRGBValue();
-            this.imageData.data[i] = 100;
+        for (let i = 0; i < this.pixelsMatrix.length; i++) {
+            for (let j = 0; j < this.pixelsMatrix[i].length; j++) {
+                this.paint(new Point(i, j), { r: 0, g: 0, b: 0, a: 255 });
+            }
         }
-        this.ctx.putImageData(this.imageData, 0, 0);
     }
 
     getPixel = (index: number): Uint8ClampedArray | undefined => {
@@ -120,22 +121,21 @@ export default class ImageDataRender {
 
     setPixel = (index: number, rgb: number[]): boolean => {
         if (!this.getPixel(index)) return false;
-        for (let i = 0; i < rgb.length; i++) {
-            this.pixels[index][i] = rgb[i];
-        }
+        if (!index) index = 1;
 
         let innerIndex = index * 4;
-        for (let i = 0; i < rgb.length; i++) {
+        for (let i = rgb.length; i >= 0; i--) {
             this.imageData.data[innerIndex] = rgb[i];
             innerIndex--;
         }
+
         return true;
     }
 
     getPixelFromMatrix = (point: Point) => {
         try {
             return this.pixelsMatrix[point.x][point.y];
-        } catch(e) {
+        } catch (e) {
             console.error(`No such pixel ${point.x}, ${point.y}.`);
         }
     }
@@ -143,11 +143,11 @@ export default class ImageDataRender {
     paint = (point: Point, color: RGB) => {
         const { x, y } = point;
         const { r, g, b, a } = color;
-        return this.setPixel(((y + 1) * this.dimensions.width) + x, [r, g, b, a]);
+        return this.setPixel((y * this.dimensions.width) + x, [r, g, b, a]);
     }
 
     rect = (object: GameObject) => {
-        const  { dimension, position, rgb } = object;
+        const { dimension, position, rgb } = object;
         if (!rgb) throw new Error("Please specify the rgb property on this GameObject to be able to render through PixelRenderer.");
         for (let i = 0; i < this.pixelsMatrix.length; i++) {
             for (let j = 0; j < this.pixelsMatrix[i].length; j++) {

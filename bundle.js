@@ -29,7 +29,7 @@ window.onload = function () {
     // test.conways(100, 100, "green", "lightgreen", 100);
 
     test.activateImageDataRendering();
-    test.newGameObject("RECTANGLE", 0, 0, 100, 100, "RED", null, null, [0, 0, 0, 1], 2);
+    test.newGameObject("RECTANGLE", 0, 0, 100, 100, "RED", null, null, [0, 255, 0, 255], 2);
     // test.render2.pixelDoodling();
 
     // let movingSquare = test.drawingVectors();
@@ -251,7 +251,6 @@ var Model;
 // @TODO - Dungeon generator.
 // @TODO - Nodejs tool that reads a image file and converts it a color-mapped JSON.
 // @TODO - Handling images.
-// @TODO - Collidables.
 // @TODO - Expand pixel rendering, perlin noise and mandelbrots.
 // @TODO - Easy networking.
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -295,7 +294,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // @TODO - Separate examples (conways, aStar etc from native functions of the engine to a 'samples' js folder teaching how to use the engine to build those).
-// @TODO - Finish the pixel renderer. 
+// @TODO - Finish the pixel renderer. - Finish primitive shapes and fix color offset. 
 var CanvasRenderer_1 = __importDefault(require("../render/CanvasRenderer"));
 var PixelRenderer_1 = __importDefault(require("../render/PixelRenderer"));
 var Model_1 = require("./Model");
@@ -322,11 +321,9 @@ var bdv = /** @class */ (function () {
         };
         this.game2 = function () {
             _this.render2.loop();
-            _this.render2.createPixelsScreen();
         };
         this.game = function () {
             _this.render.loop();
-            _this.render.clear();
         };
         this.newGameObject = function (model, positionX, positionY, width, height, color, font, message, rgb, renderOption) {
             var object = new GameObject_1.default(Model_1.Model[model], new Point_1.default(positionX, positionY), new Dimension_1.default(width, height), color, font, message, { r: rgb[0], g: rgb[1], b: rgb[2], a: rgb[3] });
@@ -1472,7 +1469,7 @@ var ImageDataRender = /** @class */ (function () {
             var inner = 0;
             var resCounter = 0;
             for (var i = 0; i < _this.pixels.length; i++) {
-                if (resCounter < _this.dimensions.width) {
+                if (inner < _this.dimensions.height) {
                     _this.pixelsMatrix[resCounter][inner] = _this.pixels[i];
                 }
                 else {
@@ -1518,11 +1515,11 @@ var ImageDataRender = /** @class */ (function () {
             return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)];
         };
         this.createPixelsScreen = function () {
-            for (var i = 0; i < _this.imageData.data.length; i++) {
-                var r = _this.getRandomRGBValue()[0];
-                _this.imageData.data[i] = 100;
+            for (var i = 0; i < _this.pixelsMatrix.length; i++) {
+                for (var j = 0; j < _this.pixelsMatrix[i].length; j++) {
+                    _this.paint(new Point_1.default(i, j), { r: 0, g: 0, b: 0, a: 255 });
+                }
             }
-            _this.ctx.putImageData(_this.imageData, 0, 0);
         };
         this.getPixel = function (index) {
             if (!_this.pixels[index])
@@ -1532,11 +1529,10 @@ var ImageDataRender = /** @class */ (function () {
         this.setPixel = function (index, rgb) {
             if (!_this.getPixel(index))
                 return false;
-            for (var i = 0; i < rgb.length; i++) {
-                _this.pixels[index][i] = rgb[i];
-            }
+            if (!index)
+                index = 1;
             var innerIndex = index * 4;
-            for (var i = 0; i < rgb.length; i++) {
+            for (var i = rgb.length; i >= 0; i--) {
                 _this.imageData.data[innerIndex] = rgb[i];
                 innerIndex--;
             }
@@ -1553,7 +1549,7 @@ var ImageDataRender = /** @class */ (function () {
         this.paint = function (point, color) {
             var x = point.x, y = point.y;
             var r = color.r, g = color.g, b = color.b, a = color.a;
-            return _this.setPixel(((y + 1) * _this.dimensions.width) + x, [r, g, b, a]);
+            return _this.setPixel((y * _this.dimensions.width) + x, [r, g, b, a]);
         };
         this.rect = function (object) {
             var dimension = object.dimension, position = object.position, rgb = object.rgb;
