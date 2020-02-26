@@ -2,12 +2,11 @@
 // @TODO - Dungeon generator.
 // @TODO - Nodejs tool that reads a image file and converts it a color-mapped JSON.
 // @TODO - Handling images.
-// @TODO - Collidables.
 // @TODO - Expand pixel rendering, perlin noise and mandelbrots.
 // @TODO - Easy networking.
 
 // @TODO - Separate examples (conways, aStar etc from native functions of the engine to a 'samples' js folder teaching how to use the engine to build those).
-// @TODO - Finish the pixel renderer. 
+// @TODO - Finish the pixel renderer. - Finish primitive shapes and fix color offset. 
 
 import bdvRender from "../render/CanvasRenderer";
 import ImageDataRender from "../render/PixelRenderer";
