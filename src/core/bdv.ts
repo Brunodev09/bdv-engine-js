@@ -6,7 +6,6 @@
 // @TODO - Easy networking.
 
 // @TODO - Separate examples (conways, aStar etc from native functions of the engine to a 'samples' js folder teaching how to use the engine to build those).
-// @TODO - Finish the pixel renderer. - Finish primitive shapes and fix color offset. 
 
 import bdvRender from "../render/CanvasRenderer";
 import ImageDataRender from "../render/PixelRenderer";
@@ -57,12 +56,10 @@ export class bdv {
 
     game2 = () => {
         this.render2.loop();
-        this.render2.createPixelsScreen();
     }
 
     game = () => {
         this.render.loop();
-        this.render.clear();
     }
 
     newGameObject = (model: string, positionX: number, positionY: number, width: number, height: number, color: string, font?: string, message?: string, rgb?: number[], renderOption?: number): GameObject => {
