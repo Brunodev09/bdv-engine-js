@@ -28,7 +28,7 @@ window.onload = function () {
     // test.conways(100, 100, "green", "lightgreen", 100);
 
     test.activateImageDataRendering();
-    test.newGameObject("RECTANGLE", 0, 0, 100, 100, "BLACK", null, null, [0, 255, 0, 0], 2);
+    test.newGameObject("RECTANGLE", 0, 0, 100, 100, "RED", null, null, [0, 0, 0, 1], 2);
     // test.render2.pixelDoodling();
 
     // let movingSquare = test.drawingVectors();
