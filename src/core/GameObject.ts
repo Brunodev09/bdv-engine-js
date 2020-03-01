@@ -28,8 +28,10 @@ export default class GameObject {
     message?: string;
     props?: any;
     id?: number;
+    imgPath: string;
+    img: HTMLImageElement;
 
-    constructor(model: Model, position: Point | Point[], dimension: Dimension, color?: string, font?: string, message?: string, rgb?: RGB) {
+    constructor(model: Model, position: Point | Point[], dimension: Dimension, color?: string, font?: string, message?: string, rgb?: RGB, img?: string) {
         _id++;
         this.id = _id;
         if (!color) color = "black";
@@ -46,9 +48,17 @@ export default class GameObject {
         this.vector = null;
         this.following = false;
         this.player = false;
+        this.imgPath = img;
+        this.img = null;
 
-        if (this.model === Model.RECTANGLE) {
-            this.middle = new Point((<Point>this.position).x + (this.dimension.width / 2), (<Point>this.position).y + (this.dimension.height / 2));
+        switch(this.model) {
+            case Model.RECTANGLE:
+                this.middle = new Point((<Point>this.position).x + (this.dimension.width / 2), (<Point>this.position).y + (this.dimension.height / 2));
+                break;
+            case Model.TEXTURE:
+                this.img = new Image();
+                this.img.src = this.imgPath;
+                break;
         }
     }
 

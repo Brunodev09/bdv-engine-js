@@ -11,5 +11,6 @@ export enum Model {
     CIRCLE_BORDER = "CIRCLE_BORDER",
     ARC = "ARC",
     VECTOR = "VECTOR",
-    PIXEL_FREE = "PIXEL_FREE"
+    PIXEL_FREE = "PIXEL_FREE",
+    TEXTURE = "TEXTURE"
 }

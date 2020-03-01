@@ -29,8 +29,8 @@ window.onload = function () {
     // test.conways(100, 100, "green", "lightgreen", 100);
 
     test.activateImageDataRendering();
-    test.newGameObject("RECTANGLE", 0, 100, 100, 100, "RED", null, null, [0, 255, 0, 255], 2);
-    test.getPixels('./assets/tileTest.png');
+    // test.newGameObject("RECTANGLE", 0, 100, 100, 100, "RED", null, null, [0, 255, 0, 255], 2);
+    test.newGameObject("TEXTURE", 0, 0, 16, 16, null, null, null, [], 2, './assets/tileTest.png');
     // test.render2.pixelDoodling();
 
     // let movingSquare = test.drawingVectors();
@@ -131,7 +131,7 @@ var Behaviour_1 = require("./Behaviour");
 var CollisionManager_1 = __importDefault(require("../collision/CollisionManager"));
 var _id = 0;
 var GameObject = /** @class */ (function () {
-    function GameObject(model, position, dimension, color, font, message, rgb) {
+    function GameObject(model, position, dimension, color, font, message, rgb, img) {
         var _this = this;
         this.addProperty = function (propName, propValue) {
             _this.props[propName] = propValue;
@@ -151,8 +151,16 @@ var GameObject = /** @class */ (function () {
         this.vector = null;
         this.following = false;
         this.player = false;
-        if (this.model === Model_1.Model.RECTANGLE) {
-            this.middle = new Point_1.default(this.position.x + (this.dimension.width / 2), this.position.y + (this.dimension.height / 2));
+        this.imgPath = img;
+        this.img = null;
+        switch (this.model) {
+            case Model_1.Model.RECTANGLE:
+                this.middle = new Point_1.default(this.position.x + (this.dimension.width / 2), this.position.y + (this.dimension.height / 2));
+                break;
+            case Model_1.Model.TEXTURE:
+                this.img = new Image();
+                this.img.src = this.imgPath;
+                break;
         }
     }
     GameObject.prototype.getMiddlePoint = function () {
@@ -244,6 +252,7 @@ var Model;
     Model["ARC"] = "ARC";
     Model["VECTOR"] = "VECTOR";
     Model["PIXEL_FREE"] = "PIXEL_FREE";
+    Model["TEXTURE"] = "TEXTURE";
 })(Model = exports.Model || (exports.Model = {}));
 
 },{}],8:[function(require,module,exports){
@@ -325,8 +334,8 @@ var bdv = /** @class */ (function () {
         this.game = function () {
             _this.render.loop();
         };
-        this.newGameObject = function (model, positionX, positionY, width, height, color, font, message, rgb, renderOption) {
-            var object = new GameObject_1.default(Model_1.Model[model], new Point_1.default(positionX, positionY), new Dimension_1.default(width, height), color, font, message, { r: rgb[0], g: rgb[1], b: rgb[2], a: rgb[3] });
+        this.newGameObject = function (model, positionX, positionY, width, height, color, font, message, rgb, renderOption, img) {
+            var object = new GameObject_1.default(Model_1.Model[model], new Point_1.default(positionX, positionY), new Dimension_1.default(width, height), color, font, message, { r: rgb[0], g: rgb[1], b: rgb[2], a: rgb[3] }, img);
             switch (renderOption) {
                 case 1:
                     _this.render.requestStage(object);
@@ -489,11 +498,6 @@ var bdv = /** @class */ (function () {
         element.setAttribute("height", String(height));
         document.body.appendChild(element);
     }
-    bdv.prototype.getPixels = function (path) {
-        this.render2.getColorOfEachPixelInImage(path, function (px) {
-            console.log(px);
-        });
-    };
     bdv.prototype.addCoordinatesToGrid = function (grid) {
         for (var i = 0; i < grid.length; i++) {
             for (var j = 0; j < grid[i].length; j++) {
@@ -1458,14 +1462,14 @@ var Geometry_1 = __importDefault(require("../math/Geometry"));
 var Point_1 = __importDefault(require("../math/Point"));
 var ImageDataRender = /** @class */ (function () {
     function ImageDataRender(canvasId, dimensions) {
-        var _this_1 = this;
+        var _this = this;
         this.start = function () {
-            _this_1.imageData = _this_1.ctx.createImageData(_this_1.dimensions.width, _this_1.dimensions.height);
-            _this_1.pixelArray = _this_1.imageData.data;
+            _this.imageData = _this.ctx.createImageData(_this.dimensions.width, _this.dimensions.height);
+            _this.pixelArray = _this.imageData.data;
             var counter = 1;
-            for (var i = 0; i < _this_1.pixelArray.length; i++) {
+            for (var i = 0; i < _this.pixelArray.length; i++) {
                 if (counter === 4) {
-                    _this_1.pixels.push(_this_1.pixelArray.slice(i - 3, i + 1));
+                    _this.pixels.push(_this.pixelArray.slice(i - 3, i + 1));
                     counter = 1;
                     continue;
                 }
@@ -1473,9 +1477,9 @@ var ImageDataRender = /** @class */ (function () {
             }
             var inner = 0;
             var resCounter = 0;
-            for (var i = 0; i < _this_1.pixels.length; i++) {
-                if (inner < _this_1.dimensions.height) {
-                    _this_1.pixelsMatrix[resCounter][inner] = _this_1.pixels[i];
+            for (var i = 0; i < _this.pixels.length; i++) {
+                if (inner < _this.dimensions.height) {
+                    _this.pixelsMatrix[resCounter][inner] = _this.pixels[i];
                 }
                 else {
                     resCounter++;
@@ -1485,21 +1489,30 @@ var ImageDataRender = /** @class */ (function () {
                 inner++;
             }
         };
+        this.clear = function () {
+            _this.ctx.fillStyle = "black";
+            _this.ctx.fillRect(0, 0, _this.dimensions.width, _this.dimensions.height);
+        };
         this.loop = function () {
-            requestAnimationFrame(_this_1.animation);
+            requestAnimationFrame(_this.animation);
         };
         this.animation = function () {
-            _this_1.createPixelsScreen();
-            _this_1.stageRenderingOrder();
-            _this_1.ctx.putImageData(_this_1.imageData, 0, 0);
-            requestAnimationFrame(_this_1.animation);
+            // this.createPixelsScreen();
+            _this.clear();
+            _this.stageRenderingOrder();
+            // this.ctx.putImageData(this.ctx.getImageData(0, 0, this.dimensions.width, this.dimensions.height), 0, 0);
+            // this.ctx.putImageData(this.imageData, 0, 0);
+            requestAnimationFrame(_this.animation);
         };
         this.stageRenderingOrder = function () {
-            for (var _i = 0, _a = _this_1.stage.queue; _i < _a.length; _i++) {
+            for (var _i = 0, _a = _this.stage.queue; _i < _a.length; _i++) {
                 var object = _a[_i];
                 switch (object.model) {
+                    case Model_1.Model.TEXTURE:
+                        _this.renderImg(object);
+                        break;
                     case Model_1.Model.RECTANGLE:
-                        _this_1.rect(object);
+                        _this.rect(object);
                         break;
                     case Model_1.Model.RECTANGLE_BORDER:
                         break;
@@ -1520,32 +1533,32 @@ var ImageDataRender = /** @class */ (function () {
             return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)];
         };
         this.createPixelsScreen = function () {
-            for (var i = 0; i < _this_1.pixelsMatrix.length; i++) {
-                for (var j = 0; j < _this_1.pixelsMatrix[i].length; j++) {
-                    _this_1.paint(new Point_1.default(i, j), { r: 0, g: 0, b: 0, a: 255 });
+            for (var i = 0; i < _this.pixelsMatrix.length; i++) {
+                for (var j = 0; j < _this.pixelsMatrix[i].length; j++) {
+                    _this.paint(new Point_1.default(i, j), { r: 0, g: 0, b: 0, a: 255 });
                 }
             }
         };
         this.getPixel = function (index) {
-            if (!_this_1.pixels[index])
+            if (!_this.pixels[index])
                 return undefined;
-            return _this_1.pixels[index];
+            return _this.pixels[index];
         };
         this.setPixel = function (index, rgb) {
-            if (!_this_1.getPixel(index))
+            if (!_this.getPixel(index))
                 return false;
             if (!index)
                 index = 1;
             var innerIndex = index * 4;
             for (var i = rgb.length; i >= 0; i--) {
-                _this_1.imageData.data[innerIndex] = rgb[i];
+                _this.imageData.data[innerIndex] = rgb[i];
                 innerIndex--;
             }
             return true;
         };
         this.getPixelFromMatrix = function (point) {
             try {
-                return _this_1.pixelsMatrix[point.x][point.y];
+                return _this.pixelsMatrix[point.x][point.y];
             }
             catch (e) {
                 console.error("No such pixel " + point.x + ", " + point.y + ".");
@@ -1554,59 +1567,35 @@ var ImageDataRender = /** @class */ (function () {
         this.paint = function (point, color) {
             var x = point.x, y = point.y;
             var r = color.r, g = color.g, b = color.b, a = color.a;
-            return _this_1.setPixel((y * _this_1.dimensions.width) + x, [r, g, b, a]);
+            return _this.setPixel((y * _this.dimensions.width) + x, [r, g, b, a]);
         };
         this.rect = function (object) {
             var dimension = object.dimension, position = object.position, rgb = object.rgb;
             if (!rgb)
                 throw new Error("Please specify the rgb property on this GameObject to be able to render through PixelRenderer.");
-            for (var i = 0; i < _this_1.pixelsMatrix.length; i++) {
-                for (var j = 0; j < _this_1.pixelsMatrix[i].length; j++) {
+            for (var i = 0; i < _this.pixelsMatrix.length; i++) {
+                for (var j = 0; j < _this.pixelsMatrix[i].length; j++) {
                     if ((i - position.x > 0 && (i - position.x) < dimension.width) && (j - position.y > 0 && (j - position.y) < dimension.height)) {
-                        _this_1.paint(new Point_1.default(i, j), object.rgb);
+                        _this.paint(new Point_1.default(i, j), object.rgb);
                     }
                 }
             }
         };
-        this.getColorOfEachPixelInImage = function (path, callback) {
-            var img = new Image();
-            var w, h;
-            var _this = _this_1;
-            img.crossOrigin = 'Anonymous';
-            img.onload = function () {
-                var auxCanvas = document.createElement('CANVAS');
-                var auxContext = auxCanvas.getContext("2d");
-                auxCanvas.width = _this.dimensions.width;
-                auxCanvas.height = _this.dimensions.height;
-                auxContext.drawImage(this, 0, 0);
-                var data = auxCanvas.toDataURL();
-                console.log(data);
-                // @ts-ignore
-                w = this.width;
-                // @ts-ignore
-                h = this.height;
-                // context.drawImage(img, 0, 0, w, h);       
-                // callback && callback(context.getImageData(0, 0, w, h));
-                // img = null;
-            };
-            img.src = path;
-            if (img.complete || img.complete === undefined) {
-                img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
-                img.src = path;
-            }
+        this.renderImg = function (object) {
+            _this.ctx.drawImage(object.img, object.position.x, object.position.y);
         };
         this.pixelDoodling = function () {
             setInterval(function () {
-                _this_1.imageData = _this_1.ctx.createImageData(_this_1.dimensions.width, _this_1.dimensions.height);
-                var _a = _this_1.getRandomRGBValue(), r = _a[0], g = _a[1], b = _a[2];
-                for (var i = 0; i < _this_1.imageData.data.length / 4; i++) {
+                _this.imageData = _this.ctx.createImageData(_this.dimensions.width, _this.dimensions.height);
+                var _a = _this.getRandomRGBValue(), r = _a[0], g = _a[1], b = _a[2];
+                for (var i = 0; i < _this.imageData.data.length / 4; i++) {
                     // const randomPixel = Math.floor(Math.random() * (this.imageData.data.length / 4));
-                    var pixel = _this_1.getPixel(i);
+                    var pixel = _this.getPixel(i);
                     for (var j = 0; j < pixel.length; j++) {
-                        _this_1.setPixel(i, [r, g, b, 0]);
+                        _this.setPixel(i, [r, g, b, 0]);
                     }
                 }
-                _this_1.ctx.putImageData(_this_1.imageData, 0, 0);
+                _this.ctx.putImageData(_this.imageData, 0, 0);
             }, 100);
         };
         this.dimensions = dimensions;
@@ -1629,19 +1618,6 @@ var ImageDataRender = /** @class */ (function () {
     };
     ImageDataRender.prototype.clearStage = function () {
         this.stage.queue = [];
-    };
-    ImageDataRender.prototype.toDataUrl = function (url, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.responseType = 'blob';
-        xhr.onload = function () {
-            var reader = new FileReader();
-            reader.onloadend = function () {
-                callback(reader.result);
-            };
-            reader.readAsDataURL(xhr.response);
-        };
-        xhr.open('GET', url);
-        xhr.send();
     };
     return ImageDataRender;
 }());

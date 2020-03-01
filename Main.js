@@ -28,8 +28,8 @@ window.onload = function () {
     // test.conways(100, 100, "green", "lightgreen", 100);
 
     test.activateImageDataRendering();
-    test.newGameObject("RECTANGLE", 0, 100, 100, 100, "RED", null, null, [0, 255, 0, 255], 2);
-    test.getPixels('./assets/tileTest.png');
+    // test.newGameObject("RECTANGLE", 0, 100, 100, 100, "RED", null, null, [0, 255, 0, 255], 2);
+    test.newGameObject("TEXTURE", 0, 0, 16, 16, null, null, null, [], 2, './assets/tileTest.png');
     // test.render2.pixelDoodling();
 
     // let movingSquare = test.drawingVectors();
