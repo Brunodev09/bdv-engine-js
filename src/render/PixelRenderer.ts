@@ -74,7 +74,7 @@ export default class ImageDataRender {
     animation = () => {
         this.createPixelsScreen();
         this.stageRenderingOrder();
-        
+
         this.ctx.putImageData(this.imageData, 0, 0);
         requestAnimationFrame(this.animation);
     }
@@ -156,6 +156,39 @@ export default class ImageDataRender {
                 }
             }
         }
+    }
+
+    private toDataUrl(url: string, callback: Function) {
+        var xhr = new XMLHttpRequest();
+        xhr.responseType = 'blob';
+        xhr.onload = function() {
+          var reader = new FileReader();
+          reader.onloadend = function() {
+            callback(reader.result);
+          };
+          reader.readAsDataURL(xhr.response);
+        };
+        xhr.open('GET', url);
+        xhr.send();
+      }
+
+    getColorOfEachPixelInImage = (path: string, callback: (pixels: ImageData) => void) => {
+        let img = new Image();
+        let w, h;
+        const _this = this;
+        img.crossOrigin = 'Anonymous';
+        img.onload = function() {
+
+            // @ts-ignore
+            w = this.width;
+            // @ts-ignore
+            h = this.height;
+            // context.drawImage(img, 0, 0, w, h);       
+            // callback && callback(context.getImageData(0, 0, w, h));
+
+            // img = null;
+        }
+        img.src = path;
     }
 
     pixelDoodling = () => {
