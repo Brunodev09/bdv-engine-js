@@ -62,6 +62,12 @@ export class bdv {
         this.render.loop();
     }
 
+    getPixels(path: string) {
+        this.render2.getColorOfEachPixelInImage(path, (px) => {
+            console.log(px);
+        });
+    }
+
     newGameObject = (model: string, positionX: number, positionY: number, width: number, height: number, color: string, font?: string, message?: string, rgb?: number[], renderOption?: number): GameObject => {
         let object = new GameObject(Model[model], new Point(positionX, positionY), new Dimension(width, height), color, font, message, { r: rgb[0], g: rgb[1], b: rgb[2], a: rgb[3] });
 
