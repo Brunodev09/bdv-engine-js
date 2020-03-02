@@ -62,6 +62,13 @@ export class bdv {
         this.render.loop();
     }
 
+    clickable = (callback: (x: number, y: number) => void) => {
+        const canvas = <HTMLCanvasElement>document.getElementById(this.canvasId);
+        canvas.addEventListener('click', (e) => {
+            callback(e.clientX, e.clientY);
+        });
+    }
+
     newGameObject = (model: string, positionX: number, positionY: number, width: number, height: number, color: string, font?: string, message?: string, rgb?: number[], renderOption?: number, img?: string): GameObject => {
         let object = new GameObject(Model[model], new Point(positionX, positionY), new Dimension(width, height), color, font, message, { r: rgb[0], g: rgb[1], b: rgb[2], a: rgb[3] }, img);
 
@@ -267,7 +274,7 @@ export class bdv {
                 if (matrix[i][j] === 0) {
                     let object = new GameObject(Model.RECTANGLE, new Point(i * tileSize.width, j * tileSize.height), new Dimension(tileSize.width, tileSize.height), "white");
                     object.props["coords"] = new Point(i, j);
-                    this.render.requestStage(object);
+                    (this.render || this.render2).requestStage(object);
                     tracker[i][j] = object;
                 }
             }

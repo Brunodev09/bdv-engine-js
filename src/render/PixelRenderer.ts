@@ -77,12 +77,12 @@ export default class ImageDataRender {
     }
 
     animation = () => {
-        // this.createPixelsScreen();
-        this.clear();
+        this.createPixelsScreen();
+        // this.clear();
         this.stageRenderingOrder();
 
         // this.ctx.putImageData(this.ctx.getImageData(0, 0, this.dimensions.width, this.dimensions.height), 0, 0);
-        // this.ctx.putImageData(this.imageData, 0, 0);
+        this.ctx.putImageData(this.imageData, 0, 0);
         requestAnimationFrame(this.animation);
     }
 
@@ -158,7 +158,9 @@ export default class ImageDataRender {
 
     rect = (object: GameObject) => {
         const { dimension, position, rgb } = object;
-        if (!rgb) throw new Error("Please specify the rgb property on this GameObject to be able to render through PixelRenderer.");
+        if (!rgb) {
+            object.rgb = { r: 211, g: 211, b: 211, a: 255 };
+        }
         for (let i = 0; i < this.pixelsMatrix.length; i++) {
             for (let j = 0; j < this.pixelsMatrix[i].length; j++) {
                 if ((i - (position as Point).x > 0 && (i - (position as Point).x) < dimension.width) && (j - (position as Point).y > 0 && (j - (position as Point).y) < dimension.height)) {
