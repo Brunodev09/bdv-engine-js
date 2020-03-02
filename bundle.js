@@ -1,43 +1,23 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.onload = function () {
     let Core = require("./dist/src/core/bdv").bdv;
-    let test = new Core(1024, 768);
-    // test.activateCanvasRendering();
+    let bdv = new Core(800, 600);
 
-    // let a = test.grid(150, 150);
-    // let equation = [1, 0, 0]; // 2x^2 + 1 -> [2, 0, 1] -> 2x² + 0x + 1
-    // test.plotFunction(a, equation, "squared", [-100, 100]);
+    bdv.activateImageDataRendering();
+    let objectMatrix = bdv.grid(16, 16);
 
-    // let pixel = test.pixelDoodling(a);
-    // let c = test.createCircle(150, 50, 50, "red");
-    // let d = test.circleSpawner(a, [c]);
-    // test.aStar(25, 25, 10, 12, 8, 12);
-    // test.aStar(25, 25, 5, 5, 10, 5, 1000, null);
-    // test.aStar(50, 50, null, null, null, null, 50, null);
+    function entityListener(gameObject, event) {
+        console.log(gameObject, event);
+    }
 
-    // test.gridFromMapFile();
-    // let mySeededMatrix = [];
-    // for (let i = 0; i < 10; i++) mySeededMatrix[i] = [];
+    for (let row of objectMatrix) {
+        for (let obj of row) {
+            obj.addCallback(entityListener);
+            obj.createClickListener();
+        }
+    }
 
-    // for (let i = 0; i < 10; i++) {
-    //     for (let j = 0; j < 10; j++) {
-    //         if (Math.floor(Math.random()*10) === 1) mySeededMatrix[i][j] = 1;
-    //         else mySeededMatrix[i][j] = 0;
-    //     }
-    // }
-    // test.conways(10, 10, mySeededMatrix, "green", "lightgreen", 100);
-    // test.conways(100, 100, "green", "lightgreen", 100);
 
-    test.activateImageDataRendering();
-    // test.newGameObject("RECTANGLE", 0, 100, 100, 100, "RED", null, null, [0, 255, 0, 255], 2);
-    test.newGameObject("TEXTURE", 0, 0, 16, 16, null, null, null, [], 2, './assets/tileTest.png');
-    // test.render2.pixelDoodling();
-
-    // let movingSquare = test.drawingVectors();
-    // let mySquare = test.newGameObject("RECTANGLE", 500, 200, 100, 100, "blue");
-    // let myPath = test.newGameObjectArray("POINTS", [[100, 20], [25, 100], [11,10]], "green");
-    // let myGrid = test.grid(50, 50);
-    // let life = test.conways(50, 50);
 }
 
 
@@ -182,6 +162,17 @@ var GameObject = /** @class */ (function () {
                 _this.position.x -= _this.props.speedX;
             if (e.code === "ArrowRight")
                 _this.position.x += _this.props.speedX;
+        });
+    };
+    GameObject.prototype.addCallback = function (callback) {
+        this.callback = callback;
+    };
+    GameObject.prototype.createClickListener = function () {
+        var _this = this;
+        document.addEventListener('click', function (e) {
+            if (e.clientX > _this.position.x && e.clientX <= _this.position.x + _this.dimension.width && e.clientY > _this.position.y && e.clientY <= _this.position.y + _this.dimension.height) {
+                _this.callback && _this.callback(_this, "clickEvent");
+            }
         });
     };
     GameObject.prototype.follow = function (object) {
@@ -334,6 +325,12 @@ var bdv = /** @class */ (function () {
         this.game = function () {
             _this.render.loop();
         };
+        this.clickable = function (callback) {
+            var canvas = document.getElementById(_this.canvasId);
+            canvas.addEventListener('click', function (e) {
+                callback(e.clientX, e.clientY);
+            });
+        };
         this.newGameObject = function (model, positionX, positionY, width, height, color, font, message, rgb, renderOption, img) {
             var object = new GameObject_1.default(Model_1.Model[model], new Point_1.default(positionX, positionY), new Dimension_1.default(width, height), color, font, message, { r: rgb[0], g: rgb[1], b: rgb[2], a: rgb[3] }, img);
             switch (renderOption) {
@@ -478,7 +475,7 @@ var bdv = /** @class */ (function () {
                     if (matrix[i][j] === 0) {
                         var object = new GameObject_1.default(Model_1.Model.RECTANGLE, new Point_1.default(i * tileSize.width, j * tileSize.height), new Dimension_1.default(tileSize.width, tileSize.height), "white");
                         object.props["coords"] = new Point_1.default(i, j);
-                        _this.render.requestStage(object);
+                        (_this.render || _this.render2).requestStage(object);
                         tracker[i][j] = object;
                     }
                 }
@@ -1497,11 +1494,11 @@ var ImageDataRender = /** @class */ (function () {
             requestAnimationFrame(_this.animation);
         };
         this.animation = function () {
-            // this.createPixelsScreen();
-            _this.clear();
+            _this.createPixelsScreen();
+            // this.clear();
             _this.stageRenderingOrder();
             // this.ctx.putImageData(this.ctx.getImageData(0, 0, this.dimensions.width, this.dimensions.height), 0, 0);
-            // this.ctx.putImageData(this.imageData, 0, 0);
+            _this.ctx.putImageData(_this.imageData, 0, 0);
             requestAnimationFrame(_this.animation);
         };
         this.stageRenderingOrder = function () {
@@ -1571,8 +1568,9 @@ var ImageDataRender = /** @class */ (function () {
         };
         this.rect = function (object) {
             var dimension = object.dimension, position = object.position, rgb = object.rgb;
-            if (!rgb)
-                throw new Error("Please specify the rgb property on this GameObject to be able to render through PixelRenderer.");
+            if (!rgb) {
+                object.rgb = { r: 211, g: 211, b: 211, a: 255 };
+            }
             for (var i = 0; i < _this.pixelsMatrix.length; i++) {
                 for (var j = 0; j < _this.pixelsMatrix[i].length; j++) {
                     if ((i - position.x > 0 && (i - position.x) < dimension.width) && (j - position.y > 0 && (j - position.y) < dimension.height)) {

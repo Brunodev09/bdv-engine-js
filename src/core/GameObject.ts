@@ -30,6 +30,7 @@ export default class GameObject {
     id?: number;
     imgPath: string;
     img: HTMLImageElement;
+    callback: Function;
 
     constructor(model: Model, position: Point | Point[], dimension: Dimension, color?: string, font?: string, message?: string, rgb?: RGB, img?: string) {
         _id++;
@@ -82,6 +83,18 @@ export default class GameObject {
             if (e.code === "ArrowDown") (<Point>this.position).y += this.props.speedY;
             if (e.code === "ArrowLeft") (<Point>this.position).x -= this.props.speedX;
             if (e.code === "ArrowRight") (<Point>this.position).x += this.props.speedX;
+        });
+    }
+
+    addCallback(callback: Function) {
+        this.callback = callback;
+    }
+
+    createClickListener() {
+        document.addEventListener('click', (e) => {
+            if (e.clientX > (<Point>this.position).x && e.clientX <= (<Point>this.position).x + this.dimension.width && e.clientY > (<Point>this.position).y && e.clientY <= (<Point>this.position).y + this.dimension.height) {
+                this.callback && this.callback(this, "clickEvent");
+            }
         });
     }
 
