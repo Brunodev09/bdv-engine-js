@@ -40,8 +40,8 @@ export default class ImageDataRender {
         let inner = 0;
         let resCounter = 0;
         for (let i = 0; i < this.pixels.length; i++) {
-            if (inner < this.dimensions.height) {
-                (this.pixelsMatrix[resCounter][inner] as any) = this.pixels[i];
+            if (inner < this.dimensions.width) {
+                (this.pixelsMatrix[inner][resCounter] as any) = this.pixels[i];
             }
             else {
                 resCounter++;

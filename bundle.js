@@ -1475,8 +1475,8 @@ var ImageDataRender = /** @class */ (function () {
             var inner = 0;
             var resCounter = 0;
             for (var i = 0; i < _this.pixels.length; i++) {
-                if (inner < _this.dimensions.height) {
-                    _this.pixelsMatrix[resCounter][inner] = _this.pixels[i];
+                if (inner < _this.dimensions.width) {
+                    _this.pixelsMatrix[inner][resCounter] = _this.pixels[i];
                 }
                 else {
                     resCounter++;
